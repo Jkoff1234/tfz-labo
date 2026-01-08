@@ -68,6 +68,10 @@ const loadSection = async (section) => {
         await loadSubscriptionsContent();
         break;
 
+      case 'tickets':
+        await loadTicketsContent();
+        break;
+
       default:
         contentArea.innerHTML = `
           <div class="text-center py-12">
@@ -400,6 +404,66 @@ const loadSubscriptionsContent = async () => {
   await fetchSubscriptions();
 };
 
+/**
+ * Carica il contenuto della sezione tickets
+ */
+const loadTicketsContent = async () => {
+  const contentArea = document.querySelector('#main-content');
+
+  contentArea.innerHTML = `
+    <div class="space-y-6">
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Ticket Supporto</h1>
+        <div class="flex space-x-3">
+          <button onclick="fetchTickets()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+            🔄 Aggiorna
+          </button>
+          <button onclick="openTicketModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
+            ➕ Nuovo Ticket
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabella Tickets -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="tickets-table">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Cliente
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Oggetto
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Priorità
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Stato
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Data Creazione
+                </th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Azioni
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <!-- I dati verranno popolati dinamicamente -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Carica i tickets
+  await fetchTickets();
+};
+
 // ====================
 // INIZIALIZZAZIONE
 // ====================
@@ -426,7 +490,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // GESTIONE MODALI CRUD
 // ====================
 
-import { saveClient, saveSubscription, deleteItem, loadClientForEdit, loadSubscriptionForEdit, loadClientsForDropdown } from './lib/crmController.js';
+import { saveClient, saveSubscription, deleteItem, loadClientForEdit, loadSubscriptionForEdit, loadClientsForDropdown, saveTicket, loadTicketForEdit } from './lib/crmController.js';
 
 /**
  * Apre la modale per nuovo cliente
@@ -529,6 +593,56 @@ window.closeSubscriptionModal = function() {
 };
 
 /**
+ * Apre la modale per nuovo ticket
+ */
+window.openTicketModal = function(ticketId = null) {
+  const modal = document.getElementById('ticket-modal');
+  const title = document.getElementById('ticket-modal-title');
+  const form = document.getElementById('ticket-form');
+
+  // Carica la lista clienti per il dropdown
+  loadClientsForDropdown().then(clients => {
+    const select = form['client_id'];
+    select.innerHTML = '<option value="">Seleziona un cliente...</option>';
+    clients.forEach(client => {
+      const option = document.createElement('option');
+      option.value = client.id;
+      option.textContent = client.full_name;
+      select.appendChild(option);
+    });
+  });
+
+  if (ticketId) {
+    // Modifica ticket esistente
+    title.textContent = 'Modifica Ticket';
+    loadTicketForEdit(ticketId).then(ticket => {
+      if (ticket) {
+        form['client_id'].value = ticket.client_id;
+        form['subject'].value = ticket.subject || '';
+        form['priority'].value = ticket.priority || 'medium';
+        form['status'].value = ticket.status || 'open';
+        form.dataset.ticketId = ticketId;
+      }
+    });
+  } else {
+    // Nuovo ticket
+    title.textContent = 'Nuovo Ticket';
+    form.reset();
+    delete form.dataset.ticketId;
+  }
+
+  modal.classList.remove('hidden');
+};
+
+/**
+ * Chiude la modale ticket
+ */
+window.closeTicketModal = function() {
+  const modal = document.getElementById('ticket-modal');
+  modal.classList.add('hidden');
+};
+
+/**
  * Gestisce il submit del form cliente
  */
 document.addEventListener('DOMContentLoaded', () => {
@@ -563,6 +677,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  const ticketForm = document.getElementById('ticket-form');
+  if (ticketForm) {
+    ticketForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(ticketForm);
+      const data = Object.fromEntries(formData);
+      const ticketId = ticketForm.dataset.ticketId;
+
+      const success = await saveTicket(data, ticketId);
+      if (success) {
+        closeTicketModal();
+      }
+    });
+  }
 });
 
 /**
@@ -574,6 +704,8 @@ window.handleTableAction = function(action, table, id) {
       openClientModal(id);
     } else if (table === 'subscriptions') {
       openSubscriptionModal(id);
+    } else if (table === 'tickets') {
+      openTicketModal(id);
     }
   } else if (action === 'delete') {
     deleteItem(table, id);
@@ -592,3 +724,5 @@ window.fetchSubscriptions = fetchSubscriptions;
 window.loadDashboardStats = loadDashboardStats;
 window.openClientModal = openClientModal;
 window.openSubscriptionModal = openSubscriptionModal;
+window.openTicketModal = openTicketModal;
+window.fetchTickets = fetchTickets;

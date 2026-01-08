@@ -203,6 +203,38 @@ export const fetchSubscriptions = async () => {
 };
 
 /**
+ * Recupera tutti i tickets con informazioni cliente
+ */
+export const fetchTickets = async () => {
+  try {
+    console.log('🎫 Caricamento tickets...');
+
+    const { data: tickets, error } = await supabase
+      .from('tickets')
+      .select(`
+        *,
+        clients (
+          full_name
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    console.log(`✅ Caricati ${tickets.length} tickets`);
+
+    // Popola la tabella HTML
+    populateTicketsTable(tickets);
+
+    return tickets;
+  } catch (error) {
+    console.error('❌ Errore caricamento tickets:', error.message);
+    showNotification('Errore caricamento tickets: ' + error.message, 'error');
+    throw error;
+  }
+};
+
+/**
  * Popola la tabella HTML degli abbonamenti con evidenziazione scadenze
  */
 const populateSubscriptionsTable = (subscriptions) => {
@@ -297,6 +329,90 @@ const populateSubscriptionsTable = (subscriptions) => {
 
   // Aggiungi event listeners per i pulsanti
   attachSubscriptionButtonListeners();
+};
+
+/**
+ * Popola la tabella HTML dei tickets
+ */
+const populateTicketsTable = (tickets) => {
+  const tableBody = document.querySelector('#tickets-table tbody');
+  if (!tableBody) {
+    console.warn('⚠️ Tabella tickets non trovata (#tickets-table tbody)');
+    return;
+  }
+
+  tableBody.innerHTML = ''; // Svuota tabella esistente
+
+  if (tickets.length === 0) {
+    const emptyRow = document.createElement('tr');
+    emptyRow.innerHTML = `
+      <td colspan="6" class="text-center py-8 text-gray-500">
+        <div class="flex flex-col items-center">
+          <svg class="w-12 h-12 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 9.192L12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z"></path>
+          </svg>
+          <p>Nessun ticket trovato</p>
+          <p class="text-sm">I ticket di supporto appariranno qui quando verranno creati</p>
+        </div>
+      </td>
+    `;
+    tableBody.appendChild(emptyRow);
+    return;
+  }
+
+  tickets.forEach(ticket => {
+    const createdDate = new Date(ticket.created_at).toLocaleDateString('it-IT');
+
+    // Classi per priorità
+    let priorityClass = 'text-gray-600 bg-gray-100 dark:bg-gray-900 dark:text-gray-300';
+    if (ticket.priority === 'high') priorityClass = 'text-orange-600 bg-orange-100 dark:bg-orange-900 dark:text-orange-300';
+    if (ticket.priority === 'urgent') priorityClass = 'text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-300';
+
+    // Classi per stato
+    let statusClass = 'text-blue-600 bg-blue-100 dark:bg-blue-900 dark:text-blue-300';
+    if (ticket.status === 'in_progress') statusClass = 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-300';
+    if (ticket.status === 'resolved') statusClass = 'text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-300';
+
+    const row = document.createElement('tr');
+    row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors';
+
+    row.innerHTML = `
+      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+        ${ticket.clients?.full_name || 'Cliente non trovato'}
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+        ${ticket.subject}
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap">
+        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${priorityClass}">
+          ${ticket.priority === 'low' ? 'Bassa' : ticket.priority === 'medium' ? 'Media' : ticket.priority === 'high' ? 'Alta' : 'Urgente'}
+        </span>
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap">
+        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">
+          ${ticket.status === 'open' ? 'Aperto' : ticket.status === 'in_progress' ? 'In Lavorazione' : 'Risolto'}
+        </span>
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+        ${createdDate}
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <button class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3 edit-ticket-btn"
+                data-ticket-id="${ticket.id}">
+          Modifica
+        </button>
+        <button class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 delete-ticket-btn"
+                data-ticket-id="${ticket.id}">
+          Elimina
+        </button>
+      </td>
+    `;
+
+    tableBody.appendChild(row);
+  });
+
+  // Aggiungi event listeners per i pulsanti
+  attachTicketButtonListeners();
 };
 
 // ====================
@@ -462,11 +578,31 @@ export const initCRM = async () => {
   console.log('✅ CRM inizializzato');
 };
 
+const attachTicketButtonListeners = () => {
+  // Pulsanti modifica
+  document.querySelectorAll('.edit-ticket-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const ticketId = e.target.dataset.ticketId;
+      console.log('Modifica ticket:', ticketId);
+      window.handleTableAction('edit', 'tickets', ticketId);
+    });
+  });
+
+  // Pulsanti elimina
+  document.querySelectorAll('.delete-ticket-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const ticketId = e.target.dataset.ticketId;
+      window.handleTableAction('delete', 'tickets', ticketId);
+    });
+  });
+};
+
 // Export delle funzioni principali
 export default {
   initCRM,
   fetchClients,
   createNewClient,
   fetchSubscriptions,
-  loadDashboardStats
+  loadDashboardStats,
+  fetchTickets
 };

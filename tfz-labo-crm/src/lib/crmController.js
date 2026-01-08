@@ -223,3 +223,96 @@ export async function loadClientsForDropdown() {
     return []
   }
 }
+
+/**
+ * Salva un ticket (nuovo o modifica esistente)
+ * @param {Object} formData - Dati del form ticket
+ * @param {string|number} [ticketId] - ID del ticket se modifica
+ * @returns {Promise<boolean>} True se riuscito
+ */
+export async function saveTicket(formData, ticketId = null) {
+  try {
+    console.log(`${ticketId ? '📝 Modifica' : '➕ Creazione'} ticket...`, formData)
+
+    const ticketData = {
+      client_id: parseInt(formData.client_id),
+      subject: formData.subject?.trim(),
+      priority: formData.priority || 'medium',
+      status: formData.status || 'open'
+    }
+
+    let result
+    if (ticketId) {
+      // Modifica esistente
+      result = await supabase
+        .from('tickets')
+        .update(ticketData)
+        .eq('id', ticketId)
+        .select()
+    } else {
+      // Nuovo ticket
+      result = await supabase
+        .from('tickets')
+        .insert([ticketData])
+        .select()
+    }
+
+    if (result.error) throw result.error
+
+    console.log('✅ Ticket salvato:', result.data[0])
+    alert(`Ticket ${ticketId ? 'modificato' : 'creato'} con successo!`)
+
+    // Inserisci evento nella timeline se è un nuovo ticket
+    if (!ticketId) {
+      const { error: timelineError } = await supabase
+        .from('timeline_events')
+        .insert([{
+          client_id: parseInt(formData.client_id),
+          event_type: 'ticket_opened',
+          description: `Aperto ticket: ${formData.subject?.trim()}`
+        }])
+
+      if (timelineError) console.warn('Errore inserimento timeline:', timelineError)
+    }
+
+    // Ricarica i dati
+    window.dispatchEvent(new Event('data-updated'))
+
+    return true
+  } catch (error) {
+    console.error('❌ Errore salvataggio ticket:', error.message)
+    alert('Errore salvataggio ticket: ' + error.message)
+    return false
+  }
+}
+
+/**
+ * Carica i dati di un ticket per la modifica
+ * @param {string|number} ticketId - ID del ticket
+ * @returns {Promise<Object|null>} Dati del ticket o null se errore
+ */
+export async function loadTicketForEdit(ticketId) {
+  try {
+    console.log('📥 Caricamento dati ticket per modifica:', ticketId)
+
+    const { data, error } = await supabase
+      .from('tickets')
+      .select(`
+        *,
+        clients (
+          full_name
+        )
+      `)
+      .eq('id', ticketId)
+      .single()
+
+    if (error) throw error
+
+    console.log('✅ Dati ticket caricati:', data)
+    return data
+  } catch (error) {
+    console.error('❌ Errore caricamento ticket:', error.message)
+    alert('Errore caricamento dati ticket: ' + error.message)
+    return null
+  }
+}
