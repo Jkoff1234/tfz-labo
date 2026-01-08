@@ -1,7 +1,7 @@
 import React from 'react'
 import { Line } from 'react-chartjs-2'
-import { Chart, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js'
-Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend)
+import { Chart, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js'
+Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler)
 
 export default function Dashboard(){
   const months = ['-5','-4','-3','-2','-1','Now']
