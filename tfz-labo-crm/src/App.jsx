@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard'
 import OrdersTable from './components/OrdersTable'
 import AddOrderModal from './components/AddOrderModal'
 import ImportCSV from './components/ImportCSV'
+import PlaceholderPage from './components/PlaceholderPage'
 
 export default function App(){
   const [activeSection, setActiveSection] = useState('dashboard')
@@ -29,7 +30,28 @@ export default function App(){
         return <Dashboard />
       case 'client-list':
         return <OrdersTable />
-      // Aggiungere altri casi per le altre sezioni
+      case 'add-client':
+        return <PlaceholderPage title="Aggiungi Nuovo Cliente" />
+      case 'active-subs':
+        return <PlaceholderPage title="Lista Abbonamenti Attivi" />
+      case 'expiring':
+        return <PlaceholderPage title="Abbonamenti in Scadenza" />
+      case 'expired':
+        return <PlaceholderPage title="Storico Scaduti" />
+      case 'open-tickets':
+        return <PlaceholderPage title="Ticket Aperti" />
+      case 'quick-replies':
+        return <PlaceholderPage title="Risposte Rapide" />
+      case 'send-logs':
+        return <PlaceholderPage title="Log Invii" />
+      case 'reminder-settings':
+        return <PlaceholderPage title="Impostazioni Reminder" />
+      case 'server-management':
+        return <PlaceholderPage title="Gestione Server/Pannelli" />
+      case 'stats-finance':
+        return <PlaceholderPage title="Statistiche & Finanze" />
+      case 'crm-settings':
+        return <PlaceholderPage title="Impostazioni CRM" />
       default:
         return <Dashboard />
     }
