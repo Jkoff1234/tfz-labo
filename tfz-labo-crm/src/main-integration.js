@@ -78,6 +78,13 @@ const loadSection = async (section) => {
         await loadSubscriptionsContent();
         break;
 
+      case 'add-subscription':
+        console.log('➕ Apertura modale nuovo abbonamento...');
+        openSubscriptionModal();
+        // Ritorna alla lista abbonamenti
+        setTimeout(() => loadSection('subscriptions'), 100);
+        break;
+
       case 'tickets':
         console.log('🎫 Caricamento tickets...');
         await loadTicketsContent();
@@ -316,6 +323,64 @@ const loadAddClientContent = async () => {
             >
           </div>
 
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="client-m3u-code" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Codice M3U (Opzionale)
+              </label>
+              <input
+                type="text"
+                id="client-m3u-code"
+                name="m3u_code"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                placeholder="http://example.com/playlist.m3u"
+              >
+            </div>
+
+            <div>
+              <label for="client-mac-address" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Indirizzo MAC (Opzionale)
+              </label>
+              <input
+                type="text"
+                id="client-mac-address"
+                name="mac_address"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                placeholder="00:1A:2B:3C:4D:5E"
+              >
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="client-device-key" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Chiave Dispositivo (Opzionale)
+              </label>
+              <input
+                type="text"
+                id="client-device-key"
+                name="device_key"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                placeholder="ABC123XYZ"
+              >
+            </div>
+
+            <div>
+              <label for="client-paid-amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Prezzo Pagato (€) (Opzionale)
+              </label>
+              <input
+                type="number"
+                id="client-paid-amount"
+                name="paid_amount"
+                step="0.01"
+                min="0"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+                placeholder="49.99"
+              >
+            </div>
+          </div>
+
           <div>
             <label for="client-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Note (Opzionale)
@@ -359,6 +424,10 @@ const loadAddClientContent = async () => {
       full_name: formData.get('full_name').trim(),
       email: formData.get('email').trim() || null,
       phone_whatsapp: formData.get('phone_whatsapp').trim() || null,
+      m3u_code: formData.get('m3u_code').trim() || null,
+      mac_address: formData.get('mac_address').trim() || null,
+      device_key: formData.get('device_key').trim() || null,
+      paid_amount: formData.get('paid_amount') ? parseFloat(formData.get('paid_amount')) : null,
       notes: formData.get('notes').trim() || null
     };
 

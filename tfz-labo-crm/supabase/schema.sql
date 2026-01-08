@@ -6,6 +6,10 @@ CREATE TABLE public.clients (
     full_name text NOT NULL,
     email text,
     phone_whatsapp text,
+    m3u_code text, -- Codice M3U del cliente
+    mac_address text, -- Indirizzo MAC del dispositivo
+    device_key text, -- Chiave del dispositivo
+    paid_amount decimal(10,2), -- Prezzo pagato
     notes text,
     status text CHECK (status IN ('active', 'inactive', 'banned')) DEFAULT 'active',
     created_at timestamptz DEFAULT now(),
@@ -19,6 +23,7 @@ CREATE TABLE public.subscriptions (
     username_iptv text NOT NULL,
     password_iptv text,
     server_url text,
+    price decimal(10,2), -- Prezzo dell'abbonamento
     start_date timestamptz NOT NULL,
     end_date timestamptz NOT NULL, -- Fondamentale per le scadenze
     package_name text,
