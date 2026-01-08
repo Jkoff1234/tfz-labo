@@ -2,6 +2,7 @@
 import Chart from 'chart.js/auto';
 
 import { supabase } from './lib/supabase.js';
+import { initCRM, fetchClients, createNewClient, fetchSubscriptions, loadDashboardStats } from './lib/crmLogic.js';
 
 // ====================
 // GESTIONE NAVIGAZIONE
@@ -1007,6 +1008,7 @@ const loadChartData = async () => {
 
 // Rendi alcune funzioni disponibili globalmente per l'uso negli event handlers HTML
 window.loadSection = loadSection;
+window.initCRM = initCRM;
 window.fetchClients = fetchClients;
 window.createNewClient = createNewClient;
 window.fetchSubscriptions = fetchSubscriptions;
