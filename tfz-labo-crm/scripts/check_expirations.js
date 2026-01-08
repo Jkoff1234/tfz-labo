@@ -51,10 +51,12 @@ async function checkExpiringSubscriptions() {
         id,
         client_id,
         end_date,
-        mac,
+        username_iptv,
+        package_name,
         clients!inner (
-          name,
-          contact
+          full_name,
+          email,
+          phone_whatsapp
         )
       `)
       .gte('end_date', today.toISOString().split('T')[0])
@@ -81,10 +83,10 @@ async function checkExpiringSubscriptions() {
         }
 
         // Genera messaggio personalizzato
-        const message = `Ciao ${sub.clients.name}, il tuo abbonamento IPTV (${sub.mac}) scade il ${endDate.toLocaleDateString('it-IT')}. Clicca qui per rinnovare.`;
+        const message = `Ciao ${sub.clients.full_name}, il tuo abbonamento IPTV (${sub.package_name || sub.username_iptv}) scade il ${endDate.toLocaleDateString('it-IT')}. Clicca qui per rinnovare.`;
 
         // Simula invio WhatsApp
-        const success = sendWhatsappMock(sub.clients.contact, message);
+        const success = sendWhatsappMock(sub.clients.phone_whatsapp, message);
 
         if (success) {
           // Logga l'evento

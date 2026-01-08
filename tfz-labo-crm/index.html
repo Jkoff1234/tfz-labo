@@ -8,5 +8,246 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Modali per gestione CRUD -->
+    <!-- Modale Gestione Cliente -->
+    <div id="client-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="client-modal-title">Nuovo Cliente</h2>
+          <button class="modal-close" onclick="closeClientModal()">&times;</button>
+        </div>
+        <form id="client-form" class="modal-form">
+          <div class="form-group">
+            <label for="client-full-name">Nome Completo *</label>
+            <input type="text" id="client-full-name" name="full_name" required>
+          </div>
+          <div class="form-group">
+            <label for="client-phone">WhatsApp</label>
+            <input type="tel" id="client-phone" name="phone_whatsapp" placeholder="+39 123 456 7890">
+          </div>
+          <div class="form-group">
+            <label for="client-notes">Note</label>
+            <textarea id="client-notes" name="notes" rows="3" placeholder="Note aggiuntive..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="client-status">Stato</label>
+            <select id="client-status" name="status">
+              <option value="active">Attivo</option>
+              <option value="inactive">Inattivo</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeClientModal()">Annulla</button>
+            <button type="submit" class="btn-primary">Salva Cliente</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modale Gestione Abbonamento -->
+    <div id="subscription-modal" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="subscription-modal-title">Nuovo Abbonamento</h2>
+          <button class="modal-close" onclick="closeSubscriptionModal()">&times;</button>
+        </div>
+        <form id="subscription-form" class="modal-form">
+          <div class="form-group">
+            <label for="sub-client">Seleziona Cliente *</label>
+            <select id="sub-client" name="client_id" required>
+              <option value="">Caricamento clienti...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="sub-username">Username IPTV *</label>
+            <input type="text" id="sub-username" name="username_iptv" required>
+          </div>
+          <div class="form-group">
+            <label for="sub-password">Password IPTV</label>
+            <input type="password" id="sub-password" name="password_iptv">
+          </div>
+          <div class="form-group">
+            <label for="sub-price">Prezzo (€)</label>
+            <input type="number" id="sub-price" name="price" step="0.01" min="0">
+          </div>
+          <div class="form-group">
+            <label for="sub-start-date">Data Inizio *</label>
+            <input type="date" id="sub-start-date" name="start_date" required>
+          </div>
+          <div class="form-group">
+            <label for="sub-end-date">Data Scadenza *</label>
+            <input type="date" id="sub-end-date" name="end_date" required>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeSubscriptionModal()">Annulla</button>
+            <button type="submit" class="btn-primary">Salva Abbonamento</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- CSS per i modali -->
+    <style>
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .modal-overlay:not(.hidden) {
+        opacity: 1;
+      }
+
+      .modal-content {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        border-radius: 12px;
+        padding: 0;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transform: scale(0.9);
+        transition: transform 0.3s ease;
+      }
+
+      .modal-overlay:not(.hidden) .modal-content {
+        transform: scale(1);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .modal-header h2 {
+        margin: 0;
+        color: #f9fafb;
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        color: #9ca3af;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+      }
+
+      .modal-close:hover {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+      }
+
+      .modal-form {
+        padding: 24px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        color: #f9fafb;
+        font-weight: 500;
+        font-size: 14px;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #f9fafb;
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: #f9fafb;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+    </style>
   </body>
 </html>

@@ -31,12 +31,12 @@ export default function Dashboard(){
           .gte('end_date', now.format('YYYY-MM-DD'))
         const activeClients = new Set(activeSubs?.map(s => s.client_id) || []).size
 
-        // Monthly revenue: sum of prices for subscriptions started this month
+        // Monthly subscriptions: count of subscriptions started this month (since no price field in new schema)
         const { data: monthlySubs } = await supabase
           .from('subscriptions')
-          .select('price')
+          .select('id')
           .gte('start_date', startOfMonth.format('YYYY-MM-DD'))
-        const monthlyRevenue = monthlySubs?.reduce((sum, s) => sum + (Number(s.price) || 0), 0) || 0
+        const monthlyRevenue = monthlySubs?.length || 0 // Using count instead of sum
 
         // Expiring soon: subscriptions ending in next 7 days
         const { data: expiring } = await supabase
@@ -46,10 +46,10 @@ export default function Dashboard(){
           .lte('end_date', nextWeek.format('YYYY-MM-DD'))
         const expiringSoon = expiring?.length || 0
 
-        // Last renewals
+        // Last renewals - aggiorniamo per il nuovo schema
         const { data: renewals } = await supabase
           .from('subscriptions')
-          .select('clients(name), start_date, price')
+          .select('clients(full_name), start_date, package_name')
           .order('start_date', { ascending: false })
           .limit(5)
         setLastRenewals(renewals || [])
@@ -123,15 +123,15 @@ export default function Dashboard(){
                 <tr className="border-b border-gray-600">
                   <th className="text-left py-2">Cliente</th>
                   <th className="text-left py-2">Data</th>
-                  <th className="text-left py-2">Prezzo</th>
+                  <th className="text-left py-2">Pacchetto</th>
                 </tr>
               </thead>
               <tbody>
                 {lastRenewals.map((renewal, idx) => (
                   <tr key={idx} className="border-b border-gray-700">
-                    <td className="py-2">{renewal.clients?.name || 'N/A'}</td>
+                    <td className="py-2">{renewal.clients?.full_name || 'N/A'}</td>
                     <td className="py-2">{dayjs(renewal.start_date).format('DD/MM/YYYY')}</td>
-                    <td className="py-2">€{renewal.price}</td>
+                    <td className="py-2">{renewal.package_name || 'N/A'}</td>
                   </tr>
                 ))}
               </tbody>

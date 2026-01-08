@@ -241,13 +241,13 @@ const loadAddClientContent = async () => {
       <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <form id="add-client-form" class="space-y-6">
           <div>
-            <label for="client-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Nome Cliente *
+            <label for="client-full-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Nome Completo *
             </label>
             <input
               type="text"
-              id="client-name"
-              name="name"
+              id="client-full-name"
+              name="full_name"
               required
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
               placeholder="Inserisci il nome completo del cliente"
@@ -255,16 +255,42 @@ const loadAddClientContent = async () => {
           </div>
 
           <div>
-            <label for="client-contact" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Contatto (Opzionale)
+            <label for="client-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Email (Opzionale)
             </label>
             <input
-              type="text"
-              id="client-contact"
-              name="contact"
+              type="email"
+              id="client-email"
+              name="email"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Email, telefono o altro contatto"
+              placeholder="cliente@email.com"
             >
+          </div>
+
+          <div>
+            <label for="client-phone-whatsapp" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Telefono WhatsApp (Opzionale)
+            </label>
+            <input
+              type="tel"
+              id="client-phone-whatsapp"
+              name="phone_whatsapp"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+              placeholder="+39 123 456 7890"
+            >
+          </div>
+
+          <div>
+            <label for="client-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Note (Opzionale)
+            </label>
+            <textarea
+              id="client-notes"
+              name="notes"
+              rows="3"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+              placeholder="Note aggiuntive sul cliente..."
+            ></textarea>
           </div>
 
           <div class="flex justify-end space-x-3">
@@ -294,8 +320,10 @@ const loadAddClientContent = async () => {
 
     const formData = new FormData(form);
     const clientData = {
-      name: formData.get('name').trim(),
-      contact: formData.get('contact').trim() || null
+      full_name: formData.get('full_name').trim(),
+      email: formData.get('email').trim() || null,
+      phone_whatsapp: formData.get('phone_whatsapp').trim() || null,
+      notes: formData.get('notes').trim() || null
     };
 
     try {
@@ -340,10 +368,10 @@ const loadSubscriptionsContent = async () => {
                   Cliente
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Durata
+                  Username IPTV
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                  Dispositivo
+                  Pacchetto
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Data Inizio
@@ -353,6 +381,9 @@ const loadSubscriptionsContent = async () => {
                 </th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                   Stato
+                </th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Azioni
                 </th>
               </tr>
             </thead>
@@ -392,6 +423,164 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ====================
+// GESTIONE MODALI CRUD
+// ====================
+
+import { saveClient, saveSubscription, deleteItem, loadClientForEdit, loadSubscriptionForEdit, loadClientsForDropdown } from './lib/crmController.js';
+
+/**
+ * Apre la modale per nuovo cliente
+ */
+window.openClientModal = function(clientId = null) {
+  const modal = document.getElementById('client-modal');
+  const title = document.getElementById('client-modal-title');
+  const form = document.getElementById('client-form');
+
+  if (clientId) {
+    // Modifica cliente esistente
+    title.textContent = 'Modifica Cliente';
+    loadClientForEdit(clientId).then(client => {
+      if (client) {
+        form['full_name'].value = client.full_name || '';
+        form['phone_whatsapp'].value = client.phone_whatsapp || '';
+        form['notes'].value = client.notes || '';
+        form['status'].value = client.status || 'active';
+        form.dataset.clientId = clientId;
+      }
+    });
+  } else {
+    // Nuovo cliente
+    title.textContent = 'Nuovo Cliente';
+    form.reset();
+    delete form.dataset.clientId;
+  }
+
+  modal.classList.remove('hidden');
+};
+
+/**
+ * Chiude la modale cliente
+ */
+window.closeClientModal = function() {
+  const modal = document.getElementById('client-modal');
+  modal.classList.add('hidden');
+};
+
+/**
+ * Apre la modale per nuovo abbonamento
+ */
+window.openSubscriptionModal = function(subscriptionId = null) {
+  const modal = document.getElementById('subscription-modal');
+  const title = document.getElementById('subscription-modal-title');
+  const form = document.getElementById('subscription-form');
+
+  // Carica la lista clienti per il dropdown
+  loadClientsForDropdown().then(clients => {
+    const select = form['client_id'];
+    select.innerHTML = '<option value="">Seleziona un cliente...</option>';
+    clients.forEach(client => {
+      const option = document.createElement('option');
+      option.value = client.id;
+      option.textContent = client.full_name;
+      select.appendChild(option);
+    });
+  });
+
+  if (subscriptionId) {
+    // Modifica abbonamento esistente
+    title.textContent = 'Modifica Abbonamento';
+    loadSubscriptionForEdit(subscriptionId).then(sub => {
+      if (sub) {
+        form['client_id'].value = sub.client_id;
+        form['username_iptv'].value = sub.username_iptv || '';
+        form['password_iptv'].value = sub.password_iptv || '';
+        form['price'].value = sub.price || '';
+        form['start_date'].value = sub.start_date ? sub.start_date.split('T')[0] : '';
+        form['end_date'].value = sub.end_date ? sub.end_date.split('T')[0] : '';
+        form.dataset.subscriptionId = subscriptionId;
+      }
+    });
+  } else {
+    // Nuovo abbonamento
+    title.textContent = 'Nuovo Abbonamento';
+    form.reset();
+
+    // Imposta date di default
+    const today = new Date().toISOString().split('T')[0];
+    const nextMonth = new Date();
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    const nextMonthStr = nextMonth.toISOString().split('T')[0];
+
+    form['start_date'].value = today;
+    form['end_date'].value = nextMonthStr;
+
+    delete form.dataset.subscriptionId;
+  }
+
+  modal.classList.remove('hidden');
+};
+
+/**
+ * Chiude la modale abbonamento
+ */
+window.closeSubscriptionModal = function() {
+  const modal = document.getElementById('subscription-modal');
+  modal.classList.add('hidden');
+};
+
+/**
+ * Gestisce il submit del form cliente
+ */
+document.addEventListener('DOMContentLoaded', () => {
+  const clientForm = document.getElementById('client-form');
+  if (clientForm) {
+    clientForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(clientForm);
+      const data = Object.fromEntries(formData);
+      const clientId = clientForm.dataset.clientId;
+
+      const success = await saveClient(data, clientId);
+      if (success) {
+        closeClientModal();
+      }
+    });
+  }
+
+  const subscriptionForm = document.getElementById('subscription-form');
+  if (subscriptionForm) {
+    subscriptionForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(subscriptionForm);
+      const data = Object.fromEntries(formData);
+      const subscriptionId = subscriptionForm.dataset.subscriptionId;
+
+      const success = await saveSubscription(data, subscriptionId);
+      if (success) {
+        closeSubscriptionModal();
+      }
+    });
+  }
+});
+
+/**
+ * Gestisce i click sui pulsanti edit/delete nelle tabelle
+ */
+window.handleTableAction = function(action, table, id) {
+  if (action === 'edit') {
+    if (table === 'clients') {
+      openClientModal(id);
+    } else if (table === 'subscriptions') {
+      openSubscriptionModal(id);
+    }
+  } else if (action === 'delete') {
+    deleteItem(table, id);
+  }
+};
+
+// ====================
 // ESPORTAZIONI GLOBALI
 // ====================
 
@@ -401,3 +590,5 @@ window.fetchClients = fetchClients;
 window.createNewClient = createNewClient;
 window.fetchSubscriptions = fetchSubscriptions;
 window.loadDashboardStats = loadDashboardStats;
+window.openClientModal = openClientModal;
+window.openSubscriptionModal = openSubscriptionModal;

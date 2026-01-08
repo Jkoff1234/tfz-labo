@@ -3,8 +3,10 @@ import { supabase } from '../lib/supabase';
 
 const AddClientForm = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    contact: ''
+    full_name: '',
+    email: '',
+    phone_whatsapp: '',
+    notes: ''
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -18,8 +20,8 @@ const AddClientForm = () => {
   };
 
   const validateForm = () => {
-    if (!formData.name.trim()) {
-      setMessage({ type: 'error', text: 'Il nome del cliente è obbligatorio' });
+    if (!formData.full_name.trim()) {
+      setMessage({ type: 'error', text: 'Il nome completo del cliente è obbligatorio' });
       return false;
     }
     return true;
@@ -38,21 +40,22 @@ const AddClientForm = () => {
         .from('clients')
         .insert([
           {
-            name: formData.name.trim(),
-            contact: formData.contact.trim() || null
+            full_name: formData.full_name.trim(),
+            email: formData.email.trim() || null,
+            phone_whatsapp: formData.phone_whatsapp.trim() || null,
+            notes: formData.notes.trim() || null
           }
-        ])
-        .select();
+        ]);
 
       if (error) throw error;
 
       setMessage({
         type: 'success',
-        text: `Cliente "${formData.name}" aggiunto con successo!`
+        text: `Cliente "${formData.full_name}" aggiunto con successo!`
       });
 
       // Reset form
-      setFormData({ name: '', contact: '' });
+      setFormData({ full_name: '', email: '', phone_whatsapp: '', notes: '' });
 
       // Trigger refresh of data (if needed)
       window.dispatchEvent(new Event('data-updated'));
@@ -79,14 +82,14 @@ const AddClientForm = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Nome Cliente */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-              Nome Cliente *
+            <label htmlFor="full_name" className="block text-sm font-medium text-gray-300 mb-2">
+              Nome Completo *
             </label>
             <input
               type="text"
-              id="name"
-              name="name"
-              value={formData.name}
+              id="full_name"
+              name="full_name"
+              value={formData.full_name}
               onChange={handleInputChange}
               className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Inserisci il nome completo del cliente"
@@ -94,23 +97,52 @@ const AddClientForm = () => {
             />
           </div>
 
-          {/* Contatto */}
+          {/* Email */}
           <div>
-            <label htmlFor="contact" className="block text-sm font-medium text-gray-300 mb-2">
-              Contatto (Opzionale)
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              Email (Opzionale)
             </label>
             <input
-              type="text"
-              id="contact"
-              name="contact"
-              value={formData.contact}
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
               onChange={handleInputChange}
               className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Email, telefono o altro contatto"
+              placeholder="cliente@email.com"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Puoi inserire email, numero di telefono WhatsApp, o qualsiasi altro mezzo di contatto
-            </p>
+          </div>
+
+          {/* Telefono WhatsApp */}
+          <div>
+            <label htmlFor="phone_whatsapp" className="block text-sm font-medium text-gray-300 mb-2">
+              Telefono WhatsApp (Opzionale)
+            </label>
+            <input
+              type="tel"
+              id="phone_whatsapp"
+              name="phone_whatsapp"
+              value={formData.phone_whatsapp}
+              onChange={handleInputChange}
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="+39 123 456 7890"
+            />
+          </div>
+
+          {/* Note */}
+          <div>
+            <label htmlFor="notes" className="block text-sm font-medium text-gray-300 mb-2">
+              Note (Opzionale)
+            </label>
+            <textarea
+              id="notes"
+              name="notes"
+              value={formData.notes}
+              onChange={handleInputChange}
+              rows="3"
+              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Note aggiuntive sul cliente..."
+            />
           </div>
 
           {/* Pulsanti */}
@@ -135,7 +167,7 @@ const AddClientForm = () => {
 
             <button
               type="button"
-              onClick={() => setFormData({ name: '', contact: '' })}
+              onClick={() => setFormData({ full_name: '', email: '', phone_whatsapp: '', notes: '' })}
               className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-800"
             >
               Reset

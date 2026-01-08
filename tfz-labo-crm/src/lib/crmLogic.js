@@ -71,10 +71,10 @@ const populateClientsTable = (clients) => {
 
     row.innerHTML = `
       <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-        ${client.name}
+        ${client.full_name}
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-        ${client.contact || '<span class="text-gray-400">Non specificato</span>'}
+        ${formatContactInfo(client)}
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
         ${createdDate}
@@ -99,6 +99,17 @@ const populateClientsTable = (clients) => {
 };
 
 /**
+ * Formatta le informazioni di contatto del cliente
+ */
+const formatContactInfo = (client) => {
+  const contacts = [];
+  if (client.email) contacts.push(`📧 ${client.email}`);
+  if (client.phone_whatsapp) contacts.push(`📱 ${client.phone_whatsapp}`);
+
+  return contacts.length > 0 ? contacts.join('<br>') : '<span class="text-gray-400">Non specificato</span>';
+};
+
+/**
  * Crea un nuovo cliente
  */
 export const createNewClient = async (clientData) => {
@@ -113,7 +124,7 @@ export const createNewClient = async (clientData) => {
     if (error) throw error;
 
     console.log('✅ Cliente creato:', data[0]);
-    showNotification(`Cliente "${clientData.name}" creato con successo!`, 'success');
+    showNotification(`Cliente "${clientData.full_name}" creato con successo!`, 'success');
 
     // Ricarica la lista clienti
     await fetchClients();
@@ -171,7 +182,7 @@ export const fetchSubscriptions = async () => {
       .select(`
         *,
         clients (
-          name
+          full_name
         )
       `)
       .order('end_date', { ascending: false });
@@ -231,7 +242,10 @@ const populateSubscriptionsTable = (subscriptions) => {
     let statusClass = 'text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-300';
     let statusText = 'Attivo';
 
-    if (isExpired) {
+    if (!sub.active) {
+      statusClass = 'text-gray-600 bg-gray-100 dark:bg-gray-900 dark:text-gray-300';
+      statusText = 'Sospeso';
+    } else if (isExpired) {
       statusClass = 'text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-300';
       statusText = 'Scaduto';
     } else if (isExpiringSoon) {
@@ -247,13 +261,13 @@ const populateSubscriptionsTable = (subscriptions) => {
 
     row.innerHTML = `
       <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-        ${sub.clients?.name || 'Cliente non trovato'}
+        ${sub.clients?.full_name || 'Cliente non trovato'}
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-        ${sub.plan_months} mesi
+        ${sub.username_iptv}
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-        ${sub.device || '-'}
+        ${sub.package_name || '-'}
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
         ${startDateFormatted}
@@ -266,10 +280,23 @@ const populateSubscriptionsTable = (subscriptions) => {
           ${statusText}
         </span>
       </td>
+      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <button class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3 edit-subscription-btn"
+                data-subscription-id="${sub.id}">
+          Modifica
+        </button>
+        <button class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 delete-subscription-btn"
+                data-subscription-id="${sub.id}">
+          Elimina
+        </button>
+      </td>
     `;
 
     tableBody.appendChild(row);
   });
+
+  // Aggiungi event listeners per i pulsanti
+  attachSubscriptionButtonListeners();
 };
 
 // ====================
@@ -393,22 +420,21 @@ const showNotification = (message, type = 'info') => {
 /**
  * Attacca event listeners ai pulsanti dei clienti
  */
-const attachClientButtonListeners = () => {
+const attachSubscriptionButtonListeners = () => {
   // Pulsanti modifica
-  document.querySelectorAll('.edit-client-btn').forEach(btn => {
+  document.querySelectorAll('.edit-subscription-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const clientId = e.target.dataset.clientId;
-      console.log('Modifica cliente:', clientId);
-      // TODO: Implementare modifica cliente
-      showNotification('Funzione modifica cliente in sviluppo', 'info');
+      const subscriptionId = e.target.dataset.subscriptionId;
+      console.log('Modifica abbonamento:', subscriptionId);
+      window.handleTableAction('edit', 'subscriptions', subscriptionId);
     });
   });
 
   // Pulsanti elimina
-  document.querySelectorAll('.delete-client-btn').forEach(btn => {
+  document.querySelectorAll('.delete-subscription-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      const clientId = e.target.dataset.clientId;
-      deleteClient(clientId);
+      const subscriptionId = e.target.dataset.subscriptionId;
+      window.handleTableAction('delete', 'subscriptions', subscriptionId);
     });
   });
 };
