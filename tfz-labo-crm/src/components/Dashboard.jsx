@@ -78,7 +78,7 @@ export default function Dashboard(){
           .select(`
             id, name, contact,
             subscriptions (
-              id, plan_months, device, start_date, end_date, price
+              id, plan_months, device, mac, m3u, start_date, end_date, price, notes
             )
           `)
           .ilike('name', `%${searchTerm}%`)
@@ -157,8 +157,15 @@ export default function Dashboard(){
                 <div className="mt-1 text-xs">
                   {client.subscriptions?.length ? (
                     client.subscriptions.map(sub => (
-                      <div key={sub.id} className="text-red-600">
-                        {sub.plan_months} mesi - €{sub.price} - Scade: {dayjs(sub.end_date).format('DD/MM/YYYY')}
+                      <div key={sub.id} className="mb-2 p-1 bg-red-50 rounded text-red-600">
+                        <div><strong>Durata:</strong> {sub.plan_months} mesi</div>
+                        <div><strong>Dispositivo:</strong> {sub.device}</div>
+                        <div><strong>MAC:</strong> {sub.mac}</div>
+                        <div><strong>M3U:</strong> {sub.m3u}</div>
+                        <div><strong>Prezzo:</strong> €{sub.price}</div>
+                        <div><strong>Inizio:</strong> {dayjs(sub.start_date).format('DD/MM/YYYY')}</div>
+                        <div><strong>Scadenza:</strong> {dayjs(sub.end_date).format('DD/MM/YYYY')}</div>
+                        {sub.notes && <div><strong>Note:</strong> {sub.notes}</div>}
                       </div>
                     ))
                   ) : (
