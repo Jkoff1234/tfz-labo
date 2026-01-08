@@ -3,7 +3,7 @@ import Chart from 'chart.js/auto';
 
 import { supabase } from './lib/supabase.js';
 import { initCRM, fetchClients, createNewClient, fetchSubscriptions, loadDashboardStats, fetchTickets, attachClientButtonListeners, deleteClient } from './lib/crmLogic.js';
-import { testConnection } from './lib/supabaseClient.js';
+import { testConnection } from './lib/supabase.js';
 
 // ====================
 // GESTIONE NAVIGAZIONE
