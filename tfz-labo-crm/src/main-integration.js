@@ -749,6 +749,15 @@ window.handleTableAction = function(action, table, id) {
 // GRAFICI INTERATTIVI
 // ====================
 
+// ====================
+// GRAFICI INTERATTIVI
+// ====================
+
+// Variabili globali per i grafici
+let subscriptionsChart = null;
+let clientsChart = null;
+let revenueChart = null;
+
 /**
  * Inizializza i grafici della dashboard
  */
@@ -756,18 +765,14 @@ const initializeCharts = () => {
   console.log('📊 Inizializzazione grafici...');
 
   // Distruggi grafici esistenti se presenti
-  const existingCharts = ['subscriptionsChart', 'clientsChart', 'revenueChart'];
-  existingCharts.forEach(chartId => {
-    const existingChart = Chart.getChart(chartId);
-    if (existingChart) {
-      existingChart.destroy();
-    }
-  });
+  if (subscriptionsChart) subscriptionsChart.destroy();
+  if (clientsChart) clientsChart.destroy();
+  if (revenueChart) revenueChart.destroy();
 
   // Grafico stato abbonamenti (Torta)
   const subscriptionsCtx = document.getElementById('subscriptionsChart');
   if (subscriptionsCtx) {
-    new Chart(subscriptionsCtx, {
+    subscriptionsChart = new Chart(subscriptionsCtx, {
       type: 'doughnut',
       data: {
         labels: ['Attivi', 'In Scadenza (48h)', 'Scaduti'],
@@ -811,7 +816,7 @@ const initializeCharts = () => {
   // Grafico clienti per mese (Linee)
   const clientsCtx = document.getElementById('clientsChart');
   if (clientsCtx) {
-    new Chart(clientsCtx, {
+    clientsChart = new Chart(clientsCtx, {
       type: 'line',
       data: {
         labels: [], // Verranno aggiornati con i mesi
@@ -847,7 +852,7 @@ const initializeCharts = () => {
   // Grafico ricavi mensili (Barre)
   const revenueCtx = document.getElementById('revenueChart');
   if (revenueCtx) {
-    new Chart(revenueCtx, {
+    revenueChart = new Chart(revenueCtx, {
       type: 'bar',
       data: {
         labels: [], // Verranno aggiornati con i mesi
@@ -921,7 +926,6 @@ const loadChartData = async () => {
       });
 
       // Aggiorna grafico abbonamenti
-      const subscriptionsChart = Chart.getChart('subscriptionsChart');
       if (subscriptionsChart) {
         subscriptionsChart.data.datasets[0].data = [active, expiring, expired];
         subscriptionsChart.update();
@@ -964,7 +968,6 @@ const loadChartData = async () => {
       const data = Object.values(monthlyData).map(item => item.count);
 
       // Aggiorna grafico clienti
-      const clientsChart = Chart.getChart('clientsChart');
       if (clientsChart) {
         clientsChart.data.labels = labels;
         clientsChart.data.datasets[0].data = data;
@@ -987,7 +990,6 @@ const loadChartData = async () => {
     }
 
     // Aggiorna grafico ricavi
-    const revenueChart = Chart.getChart('revenueChart');
     if (revenueChart) {
       revenueChart.data.labels = revenueLabels;
       revenueChart.data.datasets[0].data = revenueData;
