@@ -36,11 +36,15 @@ const setupNavigation = () => {
  * Carica il contenuto di una sezione specifica
  */
 const loadSection = async (section) => {
+  console.log('🔄 loadSection chiamata con sezione:', section);
+
   const contentArea = document.querySelector('#main-content');
   if (!contentArea) {
-    console.error('Area contenuto principale non trovata (#main-content)');
+    console.error('❌ Area contenuto principale non trovata (#main-content)');
     return;
   }
+
+  console.log('✅ Area contenuto trovata, caricamento sezione...');
 
   // Mostra loader
   contentArea.innerHTML = `
@@ -51,28 +55,35 @@ const loadSection = async (section) => {
   `;
 
   try {
+    console.log('🔍 Controllo sezione:', section);
     switch (section) {
       case 'dashboard':
+        console.log('📊 Caricamento dashboard...');
         await loadDashboardContent();
         break;
 
       case 'clients-list':
+        console.log('👥 Caricamento lista clienti...');
         await loadClientsContent();
         break;
 
       case 'add-client':
+        console.log('➕ Caricamento form aggiungi cliente...');
         await loadAddClientContent();
         break;
 
       case 'subscriptions':
+        console.log('📺 Caricamento abbonamenti...');
         await loadSubscriptionsContent();
         break;
 
       case 'tickets':
+        console.log('🎫 Caricamento tickets...');
         await loadTicketsContent();
         break;
 
       default:
+        console.log('❓ Sezione non riconosciuta:', section);
         contentArea.innerHTML = `
           <div class="text-center py-12">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Sezione in Sviluppo</h2>
@@ -475,12 +486,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   console.log('🚀 Avvio applicazione CRM IPTV...');
 
   // Setup navigazione
+  console.log('🔧 Setup navigazione...');
   setupNavigation();
 
   // Inizializza CRM (connessione DB, dati iniziali)
+  console.log('🗄️ Inizializzazione CRM...');
   await initCRM();
 
   // Carica dashboard come pagina iniziale
+  console.log('📊 Caricamento dashboard iniziale...');
   await loadSection('dashboard');
 
   console.log('✅ Applicazione CRM pronta!');

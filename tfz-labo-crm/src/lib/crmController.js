@@ -1,9 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-// Inizializzazione Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-const supabase = createClient(supabaseUrl, supabaseKey)
+import { supabase } from './supabase.js'
 
 /**
  * Salva un cliente (nuovo o modifica esistente)

@@ -1,7 +1,7 @@
 // crmLogic.js
 // Logica di business per CRM IPTV con Supabase
 
-import { supabase } from './supabaseClient.js';
+import { supabase } from './supabase.js';
 
 // ====================
 // GESTIONE CLIENTI
