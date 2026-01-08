@@ -1,8 +1,7 @@
-// main.js
-// File principale per l'integrazione Supabase con CRM IPTV
-// Questo file collega la logica di business con l'interfaccia utente
+// Import Chart.js
+import Chart from 'chart.js/auto';
 
-import { initCRM, fetchClients, createNewClient, fetchSubscriptions, loadDashboardStats } from './lib/crmLogic.js';
+import { supabase } from './lib/supabase.js';
 
 // ====================
 // GESTIONE NAVIGAZIONE
@@ -172,16 +171,36 @@ const loadDashboardContent = async () => {
         </div>
       </div>
 
-      <!-- Placeholder per grafici futuri -->
+      <!-- Grafici Interattivi -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Grafico Stato Abbonamenti -->
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stato Abbonamenti</h3>
+          <canvas id="subscriptionsChart" width="400" height="300"></canvas>
+        </div>
+
+        <!-- Grafico Clienti per Mese -->
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Clienti Registrati (Ultimi 6 mesi)</h3>
+          <canvas id="clientsChart" width="400" height="300"></canvas>
+        </div>
+      </div>
+
+      <!-- Grafico Ricavi Mensili -->
       <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Grafici e Analisi</h3>
-        <p class="text-gray-600 dark:text-gray-300">I grafici interattivi saranno disponibili nella prossima versione.</p>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ricavi Mensili</h3>
+        <canvas id="revenueChart" width="800" height="300"></canvas>
       </div>
     </div>
   `;
 
   // Carica le statistiche
   await loadDashboardStats();
+
+  // Inizializza i grafici dopo un breve delay per assicurarsi che il DOM sia pronto
+  setTimeout(() => {
+    initializeCharts();
+  }, 100);
 };
 
 /**
@@ -727,6 +746,260 @@ window.handleTableAction = function(action, table, id) {
 };
 
 // ====================
+// GRAFICI INTERATTIVI
+// ====================
+
+/**
+ * Inizializza i grafici della dashboard
+ */
+const initializeCharts = () => {
+  console.log('📊 Inizializzazione grafici...');
+
+  // Distruggi grafici esistenti se presenti
+  const existingCharts = ['subscriptionsChart', 'clientsChart', 'revenueChart'];
+  existingCharts.forEach(chartId => {
+    const existingChart = Chart.getChart(chartId);
+    if (existingChart) {
+      existingChart.destroy();
+    }
+  });
+
+  // Grafico stato abbonamenti (Torta)
+  const subscriptionsCtx = document.getElementById('subscriptionsChart');
+  if (subscriptionsCtx) {
+    new Chart(subscriptionsCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Attivi', 'In Scadenza (48h)', 'Scaduti'],
+        datasets: [{
+          data: [0, 0, 0], // Verranno aggiornati con i dati reali
+          backgroundColor: [
+            'rgba(34, 197, 94, 0.8)',  // Verde per attivi
+            'rgba(251, 191, 36, 0.8)', // Giallo per in scadenza
+            'rgba(239, 68, 68, 0.8)'   // Rosso per scaduti
+          ],
+          borderColor: [
+            'rgba(34, 197, 94, 1)',
+            'rgba(251, 191, 36, 1)',
+            'rgba(239, 68, 68, 1)'
+          ],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                return `${label}: ${value} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Grafico clienti per mese (Linee)
+  const clientsCtx = document.getElementById('clientsChart');
+  if (clientsCtx) {
+    new Chart(clientsCtx, {
+      type: 'line',
+      data: {
+        labels: [], // Verranno aggiornati con i mesi
+        datasets: [{
+          label: 'Nuovi Clienti',
+          data: [], // Verranno aggiornati con i dati
+          borderColor: 'rgba(59, 130, 246, 1)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              stepSize: 1
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Grafico ricavi mensili (Barre)
+  const revenueCtx = document.getElementById('revenueChart');
+  if (revenueCtx) {
+    new Chart(revenueCtx, {
+      type: 'bar',
+      data: {
+        labels: [], // Verranno aggiornati con i mesi
+        datasets: [{
+          label: 'Ricavi (€)',
+          data: [], // Verranno aggiornati con i dati
+          backgroundColor: 'rgba(16, 185, 129, 0.8)',
+          borderColor: 'rgba(16, 185, 129, 1)',
+          borderWidth: 1,
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                return '€' + value;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Carica i dati per aggiornare i grafici
+  loadChartData();
+};
+
+/**
+ * Carica i dati per aggiornare i grafici
+ */
+const loadChartData = async () => {
+  try {
+    console.log('📊 Caricamento dati grafici...');
+
+    // Carica dati abbonamenti per il grafico a torta
+    const { data: subscriptions, error: subError } = await supabase
+      .from('subscriptions')
+      .select('status, end_date');
+
+    if (!subError && subscriptions) {
+      const now = new Date();
+      const in48Hours = new Date(now.getTime() + (48 * 60 * 60 * 1000));
+
+      let active = 0;
+      let expiring = 0;
+      let expired = 0;
+
+      subscriptions.forEach(sub => {
+        const endDate = new Date(sub.end_date);
+        if (sub.status === 'active') {
+          if (endDate < now) {
+            expired++;
+          } else if (endDate <= in48Hours) {
+            expiring++;
+          } else {
+            active++;
+          }
+        } else {
+          expired++;
+        }
+      });
+
+      // Aggiorna grafico abbonamenti
+      const subscriptionsChart = Chart.getChart('subscriptionsChart');
+      if (subscriptionsChart) {
+        subscriptionsChart.data.datasets[0].data = [active, expiring, expired];
+        subscriptionsChart.update();
+      }
+    }
+
+    // Carica dati clienti per il grafico lineare (ultimi 6 mesi)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const { data: clients, error: clientsError } = await supabase
+      .from('clients')
+      .select('created_at')
+      .gte('created_at', sixMonthsAgo.toISOString())
+      .order('created_at');
+
+    if (!clientsError && clients) {
+      const monthlyData = {};
+      const monthNames = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+
+      // Inizializza gli ultimi 6 mesi
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const label = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+        monthlyData[key] = { count: 0, label };
+      }
+
+      // Conta clienti per mese
+      clients.forEach(client => {
+        const date = new Date(client.created_at);
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        if (monthlyData[key]) {
+          monthlyData[key].count++;
+        }
+      });
+
+      const labels = Object.values(monthlyData).map(item => item.label);
+      const data = Object.values(monthlyData).map(item => item.count);
+
+      // Aggiorna grafico clienti
+      const clientsChart = Chart.getChart('clientsChart');
+      if (clientsChart) {
+        clientsChart.data.labels = labels;
+        clientsChart.data.datasets[0].data = data;
+        clientsChart.update();
+      }
+    }
+
+    // Simula dati ricavi mensili (potrebbero essere calcolati da pagamenti/timeline_events)
+    const revenueLabels = [];
+    const revenueData = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthNames = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+                         'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+      revenueLabels.push(`${monthNames[date.getMonth()]} ${date.getFullYear()}`);
+      // Dati simulati - in produzione calcolare da pagamenti effettivi
+      revenueData.push(Math.floor(Math.random() * 5000) + 1000);
+    }
+
+    // Aggiorna grafico ricavi
+    const revenueChart = Chart.getChart('revenueChart');
+    if (revenueChart) {
+      revenueChart.data.labels = revenueLabels;
+      revenueChart.data.datasets[0].data = revenueData;
+      revenueChart.update();
+    }
+
+  } catch (error) {
+    console.error('❌ Errore caricamento dati grafici:', error);
+  }
+};
+
+// ====================
 // ESPORTAZIONI GLOBALI
 // ====================
 
@@ -740,3 +1013,5 @@ window.openClientModal = openClientModal;
 window.openSubscriptionModal = openSubscriptionModal;
 window.openTicketModal = openTicketModal;
 window.fetchTickets = fetchTickets;
+window.initializeCharts = initializeCharts;
+window.loadChartData = loadChartData;
