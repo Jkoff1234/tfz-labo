@@ -10,11 +10,12 @@ export default function Dashboard(){
     activeClients: 0,
     monthlyRevenue: 0,
     expiringSoon: 0,
-    totalExpired: 0
+    openTickets: 5 // Placeholder, since no tickets table
   })
   const [searchTerm, setSearchTerm] = useState('')
   const [clients, setClients] = useState([])
   const [loadingClients, setLoadingClients] = useState(false)
+  const [lastRenewals, setLastRenewals] = useState([])
 
   useEffect(() => {
     async function fetchMetrics() {
@@ -45,14 +46,15 @@ export default function Dashboard(){
           .lte('end_date', nextWeek.format('YYYY-MM-DD'))
         const expiringSoon = expiring?.length || 0
 
-        // Total expired
-        const { data: expired } = await supabase
+        // Last renewals
+        const { data: renewals } = await supabase
           .from('subscriptions')
-          .select('id')
-          .lt('end_date', now.format('YYYY-MM-DD'))
-        const totalExpired = expired?.length || 0
+          .select('clients(name), start_date, price')
+          .order('start_date', { ascending: false })
+          .limit(5)
+        setLastRenewals(renewals || [])
 
-        setMetrics({ activeClients, monthlyRevenue, expiringSoon, totalExpired })
+        setMetrics({ activeClients, monthlyRevenue, expiringSoon, openTickets: 5 })
       } catch (error) {
         console.error('Error fetching metrics:', error)
       }
@@ -65,116 +67,92 @@ export default function Dashboard(){
     return () => window.removeEventListener('data-updated', handleDataUpdate)
   }, [])
 
-  useEffect(() => {
-    async function searchClients() {
-      if (!searchTerm.trim()) {
-        setClients([])
-        return
-      }
-      setLoadingClients(true)
-      try {
-        const { data, error } = await supabase
-          .from('clients')
-          .select(`
-            id, name, contact,
-            subscriptions (
-              id, plan_months, device, mac, m3u, start_date, end_date, price, notes
-            )
-          `)
-          .ilike('name', `%${searchTerm}%`)
-          .limit(10)
-        if (error) throw error
-        setClients(data || [])
-      } catch (error) {
-        console.error('Error searching clients:', error)
-      } finally {
-        setLoadingClients(false)
-      }
-    }
-
-    const debounce = setTimeout(searchClients, 300)
-    return () => clearTimeout(debounce)
-  }, [searchTerm])
-
-  const months = ['-5','-4','-3','-2','-1','Now']
+  const months = ['Gen','Feb','Mar','Apr','Mag','Giu']
   const data = {
     labels: months,
     datasets: [{
-      label: 'Vendite',
-      data: [120,200,150,220,300,260], // Placeholder, can be made dynamic later
-      borderColor: '#dc2626',
-      backgroundColor: 'rgba(220,38,38,0.15)',
+      label: 'Abbonamenti',
+      data: [120,200,150,220,300,260],
+      borderColor: '#10b981',
+      backgroundColor: 'rgba(16,185,129,0.15)',
       tension: 0.3,
       fill: true
     }]
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div className="p-4 bg-red-50 rounded-lg border border-red-300">
-        <div className="text-sm text-red-500">Clienti Attivi</div>
-        <div className="text-2xl font-mono text-red-700">{metrics.activeClients}</div>
-      </div>
-      <div className="p-4 bg-red-50 rounded-lg border border-red-300">
-        <div className="text-sm text-red-500">Entrate Questo Mese</div>
-        <div className="text-2xl font-mono text-red-700">€ {metrics.monthlyRevenue.toFixed(2)}</div>
-      </div>
-      <div className="p-4 bg-red-50 rounded-lg border border-red-300">
-        <div className="text-sm text-red-500">In Scadenza (7gg)</div>
-        <div className="text-2xl font-mono text-red-700">{metrics.expiringSoon}</div>
-      </div>
-      <div className="p-4 bg-red-50 rounded-lg border border-red-300">
-        <div className="text-sm text-red-500">Tot. Scaduti</div>
-        <div className="text-2xl font-mono text-red-700">{metrics.totalExpired}</div>
-      </div>
-
-      <div className="mt-4 bg-red-50 rounded-lg p-4 border border-red-300">
-        <h3 className="text-sm text-red-500 mb-2">Vendite ultimi 6 mesi</h3>
-        <div className="h-48">
-          <Line data={data} options={{responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#dc2626'}}}, scales:{x:{ticks:{color:'#dc2626'}}, y:{ticks:{color:'#dc2626'}}}}} />
+    <div className="space-y-6">
+      {/* Top Bar: Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-lg p-4 border border-gray-700 shadow-lg">
+          <div className="text-sm text-gray-400">Totale Utenti Attivi</div>
+          <div className="text-2xl font-mono text-green-400">{metrics.activeClients}</div>
+          <div className="text-xs text-green-300">+12% vs mese scorso</div>
+        </div>
+        <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-lg p-4 border border-gray-700 shadow-lg">
+          <div className="text-sm text-gray-400">Incasso Mensile (MRR)</div>
+          <div className="text-2xl font-mono text-green-400">€ {metrics.monthlyRevenue.toFixed(2)}</div>
+        </div>
+        <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-lg p-4 border border-gray-700 shadow-lg">
+          <div className="text-sm text-gray-400">Scadenze Urgenti</div>
+          <div className="text-2xl font-mono text-red-400">{metrics.expiringSoon}</div>
+        </div>
+        <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-lg p-4 border border-gray-700 shadow-lg">
+          <div className="text-sm text-gray-400">Ticket Aperti</div>
+          <div className="text-2xl font-mono text-yellow-400">{metrics.openTickets}</div>
         </div>
       </div>
 
-      <div className="mt-4 bg-red-50 rounded-lg p-4 border border-red-300">
-        <h3 className="text-sm text-red-500 mb-2">Ricerca Clienti</h3>
-        <input
-          type="text"
-          placeholder="Cerca per nome..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full p-2 mb-3 bg-white border border-red-300 rounded text-red-600"
-        />
-        <div className="h-48 overflow-auto">
-          {loadingClients ? (
-            <div className="text-red-500">Caricamento...</div>
-          ) : clients.length === 0 ? (
-            <div className="text-red-500">Nessun cliente trovato</div>
-          ) : (
-            clients.map(client => (
-              <div key={client.id} className="mb-3 p-2 bg-white rounded border border-red-200">
-                <div className="font-medium text-red-700">{client.name}</div>
-                {client.contact && <div className="text-xs text-red-500">{client.contact}</div>}
-                <div className="mt-1 text-xs">
-                  {client.subscriptions?.length ? (
-                    client.subscriptions.map(sub => (
-                      <div key={sub.id} className="mb-2 p-1 bg-red-50 rounded text-red-600">
-                        <div><strong>Durata:</strong> {sub.plan_months} mesi</div>
-                        <div><strong>Dispositivo:</strong> {sub.device}</div>
-                        <div><strong>MAC:</strong> {sub.mac}</div>
-                        <div><strong>M3U:</strong> {sub.m3u}</div>
-                        <div><strong>Prezzo:</strong> €{sub.price}</div>
-                        <div><strong>Inizio:</strong> {dayjs(sub.start_date).format('DD/MM/YYYY')}</div>
-                        <div><strong>Scadenza:</strong> {dayjs(sub.end_date).format('DD/MM/YYYY')}</div>
-                        {sub.notes && <div><strong>Note:</strong> {sub.notes}</div>}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-red-500">Nessun abbonamento</div>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
+      {/* Main Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left: 2/3 */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Chart */}
+          <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-lg p-4 border border-gray-700 shadow-lg">
+            <h3 className="text-lg font-medium text-white mb-4">Andamento Abbonamenti</h3>
+            <div className="h-64">
+              <Line data={data} options={{responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#fff'}}}, scales:{x:{ticks:{color:'#ccc'}}, y:{ticks:{color:'#ccc'}}}}} />
+            </div>
+          </div>
+
+          {/* Table: Ultimi Rinnovi */}
+          <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-lg p-4 border border-gray-700 shadow-lg">
+            <h3 className="text-lg font-medium text-white mb-4">Ultimi Rinnovi</h3>
+            <table className="w-full text-sm text-gray-300">
+              <thead>
+                <tr className="border-b border-gray-600">
+                  <th className="text-left py-2">Cliente</th>
+                  <th className="text-left py-2">Data</th>
+                  <th className="text-left py-2">Prezzo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lastRenewals.map((renewal, idx) => (
+                  <tr key={idx} className="border-b border-gray-700">
+                    <td className="py-2">{renewal.clients?.name || 'N/A'}</td>
+                    <td className="py-2">{dayjs(renewal.start_date).format('DD/MM/YYYY')}</td>
+                    <td className="py-2">€{renewal.price}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Right: 1/3 Action Center */}
+        <div className="bg-gray-800 bg-opacity-50 backdrop-blur-sm rounded-lg p-4 border border-gray-700 shadow-lg">
+          <h3 className="text-lg font-medium text-white mb-4">Action Center</h3>
+          <div className="space-y-3">
+            <div className="p-3 bg-red-900 bg-opacity-50 rounded border border-red-700">
+              <div className="text-sm text-red-300">Cliente Mario Rossi scade domani</div>
+              <button className="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-xs">Contatta</button>
+            </div>
+            <div className="p-3 bg-yellow-900 bg-opacity-50 rounded border border-yellow-700">
+              <div className="text-sm text-yellow-300">Ticket #123: Problema connessione</div>
+              <button className="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-xs">Rispondi</button>
+            </div>
+            {/* Add more items */}
+          </div>
         </div>
       </div>
     </div>
