@@ -99,6 +99,36 @@ const populateClientsTable = (clients) => {
 };
 
 /**
+ * Attacca gli event listeners ai pulsanti della tabella clienti
+ */
+export const attachClientButtonListeners = () => {
+  // Event listeners per i pulsanti modifica
+  document.querySelectorAll('.edit-client-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const clientId = e.target.getAttribute('data-client-id');
+      if (clientId) {
+        // Qui dovresti aprire il modal di modifica cliente
+        console.log('Modifica cliente:', clientId);
+        // Per ora, ricarica la lista clienti
+        fetchClients();
+      }
+    });
+  });
+
+  // Event listeners per i pulsanti elimina
+  document.querySelectorAll('.delete-client-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const clientId = e.target.getAttribute('data-client-id');
+      if (clientId && confirm('Sei sicuro di voler eliminare questo cliente?')) {
+        deleteClient(clientId);
+      }
+    });
+  });
+};
+
+/**
  * Formatta le informazioni di contatto del cliente
  */
 const formatContactInfo = (client) => {
@@ -604,5 +634,6 @@ export default {
   createNewClient,
   fetchSubscriptions,
   loadDashboardStats,
-  fetchTickets
-};
+  fetchTickets,
+  attachClientButtonListeners,
+  deleteClient,};

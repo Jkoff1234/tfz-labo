@@ -2,7 +2,8 @@
 import Chart from 'chart.js/auto';
 
 import { supabase } from './lib/supabase.js';
-import { initCRM, fetchClients, createNewClient, fetchSubscriptions, loadDashboardStats } from './lib/crmLogic.js';
+import { initCRM, fetchClients, createNewClient, fetchSubscriptions, loadDashboardStats, fetchTickets, attachClientButtonListeners, deleteClient } from './lib/crmLogic.js';
+import { testConnection } from './lib/supabaseClient.js';
 
 // ====================
 // GESTIONE NAVIGAZIONE
@@ -901,7 +902,7 @@ const loadChartData = async () => {
     // Carica dati abbonamenti per il grafico a torta
     const { data: subscriptions, error: subError } = await supabase
       .from('subscriptions')
-      .select('status, end_date');
+      .select('active, end_date');
 
     if (!subError && subscriptions) {
       const now = new Date();
@@ -913,7 +914,7 @@ const loadChartData = async () => {
 
       subscriptions.forEach(sub => {
         const endDate = new Date(sub.end_date);
-        if (sub.status === 'active') {
+        if (sub.active) {
           if (endDate < now) {
             expired++;
           } else if (endDate <= in48Hours) {
@@ -1009,6 +1010,7 @@ const loadChartData = async () => {
 // Rendi alcune funzioni disponibili globalmente per l'uso negli event handlers HTML
 window.loadSection = loadSection;
 window.initCRM = initCRM;
+window.testConnection = testConnection;
 window.fetchClients = fetchClients;
 window.createNewClient = createNewClient;
 window.fetchSubscriptions = fetchSubscriptions;
@@ -1017,5 +1019,7 @@ window.openClientModal = openClientModal;
 window.openSubscriptionModal = openSubscriptionModal;
 window.openTicketModal = openTicketModal;
 window.fetchTickets = fetchTickets;
+window.attachClientButtonListeners = attachClientButtonListeners;
+window.deleteClient = deleteClient;
 window.initializeCharts = initializeCharts;
 window.loadChartData = loadChartData;
