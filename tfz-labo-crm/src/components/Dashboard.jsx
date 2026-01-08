@@ -12,6 +12,9 @@ export default function Dashboard(){
     expiringSoon: 0,
     totalExpired: 0
   })
+  const [searchTerm, setSearchTerm] = useState('')
+  const [clients, setClients] = useState([])
+  const [loadingClients, setLoadingClients] = useState(false)
 
   useEffect(() => {
     async function fetchMetrics() {
@@ -62,6 +65,37 @@ export default function Dashboard(){
     return () => window.removeEventListener('data-updated', handleDataUpdate)
   }, [])
 
+  useEffect(() => {
+    async function searchClients() {
+      if (!searchTerm.trim()) {
+        setClients([])
+        return
+      }
+      setLoadingClients(true)
+      try {
+        const { data, error } = await supabase
+          .from('clients')
+          .select(`
+            id, name, contact,
+            subscriptions (
+              id, plan_months, device, start_date, end_date, price
+            )
+          `)
+          .ilike('name', `%${searchTerm}%`)
+          .limit(10)
+        if (error) throw error
+        setClients(data || [])
+      } catch (error) {
+        console.error('Error searching clients:', error)
+      } finally {
+        setLoadingClients(false)
+      }
+    }
+
+    const debounce = setTimeout(searchClients, 300)
+    return () => clearTimeout(debounce)
+  }, [searchTerm])
+
   const months = ['-5','-4','-3','-2','-1','Now']
   const data = {
     labels: months,
@@ -94,10 +128,46 @@ export default function Dashboard(){
         <div className="text-2xl font-mono text-red-700">{metrics.totalExpired}</div>
       </div>
 
-      <div className="md:col-span-2 mt-4 bg-red-50 rounded-lg p-4 border border-red-300">
+      <div className="mt-4 bg-red-50 rounded-lg p-4 border border-red-300">
         <h3 className="text-sm text-red-500 mb-2">Vendite ultimi 6 mesi</h3>
         <div className="h-48">
           <Line data={data} options={{responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#dc2626'}}}, scales:{x:{ticks:{color:'#dc2626'}}, y:{ticks:{color:'#dc2626'}}}}} />
+        </div>
+      </div>
+
+      <div className="mt-4 bg-red-50 rounded-lg p-4 border border-red-300">
+        <h3 className="text-sm text-red-500 mb-2">Ricerca Clienti</h3>
+        <input
+          type="text"
+          placeholder="Cerca per nome..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full p-2 mb-3 bg-white border border-red-300 rounded text-red-600"
+        />
+        <div className="h-48 overflow-auto">
+          {loadingClients ? (
+            <div className="text-red-500">Caricamento...</div>
+          ) : clients.length === 0 ? (
+            <div className="text-red-500">Nessun cliente trovato</div>
+          ) : (
+            clients.map(client => (
+              <div key={client.id} className="mb-3 p-2 bg-white rounded border border-red-200">
+                <div className="font-medium text-red-700">{client.name}</div>
+                {client.contact && <div className="text-xs text-red-500">{client.contact}</div>}
+                <div className="mt-1 text-xs">
+                  {client.subscriptions?.length ? (
+                    client.subscriptions.map(sub => (
+                      <div key={sub.id} className="text-red-600">
+                        {sub.plan_months} mesi - €{sub.price} - Scade: {dayjs(sub.end_date).format('DD/MM/YYYY')}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-red-500">Nessun abbonamento</div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
