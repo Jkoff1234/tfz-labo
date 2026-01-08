@@ -5,6 +5,7 @@ import OrdersTable from './components/OrdersTable'
 import AddOrderModal from './components/AddOrderModal'
 import ImportCSV from './components/ImportCSV'
 import PlaceholderPage from './components/PlaceholderPage'
+import AddClientForm from './components/AddClientForm'
 
 export default function App(){
   const [activeSection, setActiveSection] = useState('dashboard')
@@ -31,7 +32,7 @@ export default function App(){
       case 'client-list':
         return <OrdersTable />
       case 'add-client':
-        return <PlaceholderPage title="Aggiungi Nuovo Cliente" />
+        return <AddClientForm />
       case 'active-subs':
         return <PlaceholderPage title="Lista Abbonamenti Attivi" />
       case 'expiring':
