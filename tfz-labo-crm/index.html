@@ -69,18 +69,20 @@
           </div>
 
           <div class="px-3 mt-6">
-            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Supporto</p>
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Ordini</p>
             <ul class="space-y-1">
               <li>
-                <a href="#" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-section="tickets">
+                <a href="#" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white transition-colors" data-section="orders">
                   <svg class="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                   </svg>
-                  Ticket Supporto
+                  Chiamata Ordini
                 </a>
               </li>
             </ul>
           </div>
+
+          <div class="px-3 mt-6">
         </nav>
       </div>
 
@@ -216,6 +218,101 @@
           <div class="modal-actions">
             <button type="button" class="btn-secondary" onclick="closeTicketModal()">Annulla</button>
             <button type="submit" class="btn-primary">Salva Ticket</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modale Nuovo Ordine -->
+    <div id="order-modal" class="modal-overlay hidden">
+      <div class="modal-content max-w-2xl w-full mx-4">
+        <div class="modal-header">
+          <h2 id="order-modal-title">Aggiungi Nuovo Cliente</h2>
+          <button class="modal-close" onclick="closeOrderModal()">&times;</button>
+        </div>
+        <form id="order-form" class="modal-form">
+          <!-- Dati Cliente -->
+          <div class="form-section">
+            <h3 class="form-section-title">Dati Cliente</h3>
+            <div class="form-group">
+              <label for="order-customer-name">Nome Cliente *</label>
+              <input type="text" id="order-customer-name" name="customer_name" required placeholder="Mario Rossi">
+            </div>
+            <div class="form-group">
+              <label for="order-customer-contact">WhatsApp/Telegram</label>
+              <input type="text" id="order-customer-contact" name="customer_contact" placeholder="+39 333 1234567">
+            </div>
+          </div>
+
+          <!-- Dettagli Abbonamento -->
+          <div class="form-section">
+            <h3 class="form-section-title">Dettagli Abbonamento</h3>
+            <div class="form-group">
+              <label for="order-line-name">Nome Linea</label>
+              <input type="text" id="order-line-name" name="line_name" placeholder="Principale">
+            </div>
+            <div class="form-group">
+              <label for="order-plan-duration">Durata Piano</label>
+              <select id="order-plan-duration" name="plan_duration" onchange="calculateEndDate()">
+                <option value="1">1 Mese</option>
+                <option value="3">3 Mesi</option>
+                <option value="6">6 Mesi</option>
+                <option value="12">12 Mesi</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="order-device-type">Tipo Dispositivo</label>
+              <select id="order-device-type" name="device_type">
+                <option value="smart_tv">Smart TV</option>
+                <option value="android_box">Android Box</option>
+                <option value="fire_tv">Fire TV</option>
+                <option value="altro">Altro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="order-price">Prezzo (€)</label>
+              <input type="number" id="order-price" name="price" step="0.01" min="0" placeholder="49.99">
+            </div>
+          </div>
+
+          <!-- Date -->
+          <div class="form-section">
+            <h3 class="form-section-title">Date</h3>
+            <div class="form-group">
+              <label for="order-start-date">Data Inizio</label>
+              <input type="date" id="order-start-date" name="start_date" onchange="calculateEndDate()">
+            </div>
+            <div class="form-group">
+              <label for="order-end-date">Data Scadenza (Calcolata)</label>
+              <input type="date" id="order-end-date" name="end_date" readonly>
+              <small class="text-gray-400">Calcolata automaticamente in base alla durata</small>
+            </div>
+          </div>
+
+          <!-- Dati Tecnici -->
+          <div class="form-section">
+            <h3 class="form-section-title">Dati Tecnici</h3>
+            <div class="form-group">
+              <label for="order-mac-address">MAC Address</label>
+              <input type="text" id="order-mac-address" name="mac_address" placeholder="00:1A:2B:3C:4D:5E">
+            </div>
+            <div class="form-group">
+              <label for="order-m3u-link">Link M3U</label>
+              <input type="url" id="order-m3u-link" name="m3u_link" placeholder="http://provider.com/get.php?...">
+            </div>
+            <div class="form-group">
+              <label for="order-password">Password</label>
+              <input type="password" id="order-password" name="password" placeholder="Password cliente">
+            </div>
+            <div class="form-group">
+              <label for="order-notes">Note</label>
+              <textarea id="order-notes" name="notes" rows="3" placeholder="Note aggiuntive..."></textarea>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeOrderModal()">Annulla</button>
+            <button type="submit" class="btn-primary">Salva Cliente</button>
           </div>
         </form>
       </div>
@@ -381,6 +478,24 @@
 
       .hidden {
         display: none !important;
+      }
+
+      /* Stili per le sezioni del form ordini */
+      .form-section {
+        margin-bottom: 24px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #f9fafb;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       }
     </style>
   </body>

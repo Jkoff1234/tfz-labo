@@ -90,6 +90,11 @@ const loadSection = async (section) => {
         await loadTicketsContent();
         break;
 
+      case 'orders':
+        console.log('📦 Caricamento ordini...');
+        await loadOrdersContent();
+        break;
+
       default:
         console.log('❓ Sezione non riconosciuta:', section);
         contentArea.innerHTML = `
@@ -565,6 +570,144 @@ const loadTicketsContent = async () => {
   await fetchTickets();
 };
 
+/**
+ * Carica il contenuto della sezione ordini
+ */
+const loadOrdersContent = async () => {
+  const contentArea = document.querySelector('#main-content');
+
+  contentArea.innerHTML = `
+    <div class="space-y-6">
+      <!-- Header -->
+      <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Chiamata Ordini</h1>
+        <button onclick="openOrderModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
+          ➕ Nuovo Ordine
+        </button>
+      </div>
+
+      <!-- Lista Ordini -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="orders-table">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Cliente
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Contatto
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Dispositivo
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Prezzo
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Scadenza
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                  Azioni
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700" id="orders-table-body">
+              <!-- Gli ordini verranno caricati qui -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Messaggio quando non ci sono ordini -->
+        <div id="no-orders-message" class="text-center py-12 hidden">
+          <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+          </svg>
+          <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">Nessun ordine</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Inizia creando il tuo primo ordine.</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Carica gli ordini
+  const orders = await fetchOrders();
+  populateOrdersTable(orders);
+};
+
+/**
+ * Popola la tabella degli ordini
+ * @param {Array} orders - Array di ordini da visualizzare
+ */
+const populateOrdersTable = (orders) => {
+  const tableBody = document.getElementById('orders-table-body');
+  const noOrdersMessage = document.getElementById('no-orders-message');
+
+  if (!tableBody) return;
+
+  if (!orders || orders.length === 0) {
+    tableBody.innerHTML = '';
+    if (noOrdersMessage) noOrdersMessage.classList.remove('hidden');
+    return;
+  }
+
+  if (noOrdersMessage) noOrdersMessage.classList.add('hidden');
+
+  tableBody.innerHTML = orders.map(order => {
+    const client = order.clients || {};
+    const subscription = order.subscriptions || {};
+    const endDate = new Date(order.end_date);
+    const isExpired = endDate < new Date();
+
+    return `
+      <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-900 dark:text-white">
+            ${client.full_name || 'N/A'}
+          </div>
+          <div class="text-sm text-gray-500 dark:text-gray-400">
+            ${subscription.username_iptv || 'N/A'}
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm text-gray-900 dark:text-white">
+            ${client.phone_whatsapp || 'N/A'}
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm text-gray-900 dark:text-white">
+            ${subscription.package_name || 'N/A'}
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm text-gray-900 dark:text-white">
+            €${order.price || 0}
+          </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            isExpired
+              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+              : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+          }">
+            ${endDate.toLocaleDateString('it-IT')}
+          </span>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+          <button onclick="handleTableAction('edit', 'orders', ${order.id})"
+                  class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">
+            ✏️ Modifica
+          </button>
+          <button onclick="handleTableAction('delete', 'orders', ${order.id})"
+                  class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+            🗑️ Elimina
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+};
+
 // ====================
 // INIZIALIZZAZIONE
 // ====================
@@ -594,7 +737,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // GESTIONE MODALI CRUD
 // ====================
 
-import { saveClient, saveSubscription, deleteItem, loadClientForEdit, loadSubscriptionForEdit, loadClientsForDropdown, saveTicket, loadTicketForEdit } from './lib/crmController.js';
+import { saveClient, saveSubscription, deleteItem, loadClientForEdit, loadSubscriptionForEdit, loadClientsForDropdown, saveTicket, loadTicketForEdit, saveOrder, loadOrderForEdit, fetchOrders, loadSubscriptionsForDropdown } from './lib/crmController.js';
 
 /**
  * Apre la modale per nuovo cliente
@@ -797,6 +940,31 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  const orderForm = document.getElementById('order-form');
+  if (orderForm) {
+    orderForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(orderForm);
+      const data = Object.fromEntries(formData);
+      const orderId = orderForm.dataset.orderId;
+
+      const success = await saveOrder(data, orderId);
+      if (success) {
+        closeOrderModal();
+      }
+    });
+  }
+
+  // Event listener per aggiornare i dati quando vengono modificati
+  window.addEventListener('data-updated', async () => {
+    const currentSection = document.querySelector('.nav-link.active')?.dataset.section;
+    if (currentSection === 'orders') {
+      const orders = await fetchOrders();
+      populateOrdersTable(orders);
+    }
+  });
 });
 
 /**
@@ -810,6 +978,8 @@ window.handleTableAction = function(action, table, id) {
       openSubscriptionModal(id);
     } else if (table === 'tickets') {
       openTicketModal(id);
+    } else if (table === 'orders') {
+      openOrderModal(id);
     }
   } else if (action === 'delete') {
     deleteItem(table, id);
@@ -1072,15 +1242,115 @@ const loadChartData = async () => {
   }
 };
 
-// ====================
-// ESPORTAZIONI GLOBALI
-// ====================
+/**
+ * Apre la modale per nuovo ordine
+ */
+window.openOrderModal = async function(orderId = null) {
+  const modal = document.getElementById('order-modal');
+  const form = document.getElementById('order-form');
+
+  // Reset form
+  form.reset();
+  form.dataset.orderId = orderId || '';
+
+  if (orderId) {
+    // Modifica ordine esistente
+    const orderData = await loadOrderForEdit(orderId);
+    if (orderData) {
+      // Popola il form con i dati esistenti
+      form['client_id'].value = orderData.client_id;
+      form['subscription_id'].value = orderData.subscription_id;
+      form['order_date'].value = orderData.order_date.split('T')[0];
+      form['start_date'].value = orderData.start_date.split('T')[0];
+      form['end_date'].value = orderData.end_date.split('T')[0];
+      form['plan_name'].value = orderData.plan_name;
+      form['plan_duration'].value = orderData.plan_duration;
+      form['price'].value = orderData.price;
+      form['payment_method'].value = orderData.payment_method;
+      form['notes'].value = orderData.notes || '';
+      form['status'].value = orderData.status;
+    }
+  } else {
+    // Nuovo ordine
+    const today = new Date().toISOString().split('T')[0];
+    form['order_date'].value = today;
+    form['start_date'].value = today;
+    form['status'].value = 'pending';
+
+    // Calcola la data di fine iniziale (1 mese)
+    calculateEndDate();
+  }
+
+  // Carica i dropdown
+  await loadClientsForDropdown('client_id');
+  await loadSubscriptionsForDropdown('subscription_id');
+
+  modal.classList.remove('hidden');
+};
+
+/**
+ * Chiude la modale ordine
+ */
+window.closeOrderModal = function() {
+  const modal = document.getElementById('order-modal');
+  modal.classList.add('hidden');
+};
+
+/**
+ * Calcola la data di scadenza in base alla durata selezionata
+ */
+window.calculateEndDate = function() {
+  const form = document.getElementById('order-form');
+  const startDate = new Date(form['start_date'].value);
+  const duration = parseInt(form['plan_duration'].value);
+
+  if (startDate && duration) {
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + duration);
+    form['end_date'].value = endDate.toISOString().split('T')[0];
+  }
+};
 
 // Rendi alcune funzioni disponibili globalmente per l'uso negli event handlers HTML
 window.loadSection = loadSection;
 window.initCRM = initCRM;
 window.testConnection = testConnection;
 window.fetchClients = fetchClients;
+window.loadClientsForDropdown = async function(selectId) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+
+  try {
+    const clients = await loadClientsForDropdown();
+    select.innerHTML = '<option value="">Seleziona un cliente...</option>';
+    clients.forEach(client => {
+      const option = document.createElement('option');
+      option.value = client.id;
+      option.textContent = client.full_name;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Errore caricamento clienti:', error);
+  }
+};
+
+window.loadSubscriptionsForDropdown = async function(selectId) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+
+  try {
+    const subscriptions = await loadSubscriptionsForDropdown();
+    select.innerHTML = '<option value="">Seleziona un abbonamento...</option>';
+    subscriptions.forEach(subscription => {
+      const option = document.createElement('option');
+      option.value = subscription.id;
+      option.textContent = `${subscription.username_iptv} - ${subscription.package_name}`;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.error('Errore caricamento abbonamenti:', error);
+  }
+};
 window.createNewClient = createNewClient;
 window.fetchSubscriptions = fetchSubscriptions;
 window.loadDashboardStats = loadDashboardStats;

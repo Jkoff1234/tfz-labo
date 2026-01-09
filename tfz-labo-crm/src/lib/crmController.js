@@ -220,6 +220,26 @@ export async function loadClientsForDropdown() {
 }
 
 /**
+ * Carica gli abbonamenti per il dropdown
+ * @returns {Promise<Array>} Array di abbonamenti
+ */
+export async function loadSubscriptionsForDropdown() {
+  try {
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('id, username_iptv, package_name')
+      .order('username_iptv', { ascending: true })
+
+    if (error) throw error
+
+    return data || []
+  } catch (error) {
+    console.error('❌ Errore caricamento abbonamenti per dropdown:', error.message)
+    return []
+  }
+}
+
+/**
  * Salva un ticket (nuovo o modifica esistente)
  * @param {Object} formData - Dati del form ticket
  * @param {string|number} [ticketId] - ID del ticket se modifica
@@ -309,5 +329,139 @@ export async function loadTicketForEdit(ticketId) {
     console.error('❌ Errore caricamento ticket:', error.message)
     alert('Errore caricamento dati ticket: ' + error.message)
     return null
+  }
+}
+
+/**
+ * Salva un ordine (nuovo o modifica esistente)
+ * @param {Object} formData - Dati del form ordine
+ * @param {string|number} [orderId] - ID dell'ordine se modifica
+ * @returns {Promise<boolean>} True se riuscito
+ */
+export async function saveOrder(formData, orderId = null) {
+  try {
+    console.log(`${orderId ? '📝 Modifica' : '➕ Creazione'} ordine...`, formData)
+
+    const orderData = {
+      client_id: parseInt(formData.client_id),
+      subscription_id: parseInt(formData.subscription_id),
+      order_date: formData.order_date,
+      start_date: formData.start_date,
+      end_date: formData.end_date,
+      plan_name: formData.plan_name?.trim(),
+      plan_duration: formData.plan_duration?.trim(),
+      price: parseFloat(formData.price),
+      payment_method: formData.payment_method,
+      notes: formData.notes?.trim() || null,
+      status: formData.status || 'pending'
+    }
+
+    let result
+    if (orderId) {
+      // Modifica esistente
+      result = await supabase
+        .from('orders')
+        .update(orderData)
+        .eq('id', orderId)
+        .select()
+    } else {
+      // Nuovo ordine
+      result = await supabase
+        .from('orders')
+        .insert([orderData])
+        .select()
+    }
+
+    if (result.error) throw result.error
+
+    console.log('✅ Ordine salvato:', result.data[0])
+    alert(`Ordine ${orderId ? 'modificato' : 'creato'} con successo!`)
+
+    // Ricarica i dati
+    window.dispatchEvent(new Event('data-updated'))
+
+    return true
+  } catch (error) {
+    console.error('❌ Errore salvataggio ordine:', error.message)
+    alert('Errore salvataggio ordine: ' + error.message)
+    return false
+  }
+}
+
+/**
+ * Carica i dati di un ordine per la modifica
+ * @param {string|number} orderId - ID dell'ordine
+ * @returns {Promise<Object|null>} Dati dell'ordine o null se errore
+ */
+export async function loadOrderForEdit(orderId) {
+  try {
+    console.log('📥 Caricamento dati ordine per modifica...', orderId)
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        clients (
+          id,
+          full_name,
+          phone_whatsapp,
+          m3u_code,
+          mac_address,
+          device_key
+        ),
+        subscriptions (
+          id,
+          username_iptv,
+          package_name,
+          server_url
+        )
+      `)
+      .eq('id', orderId)
+      .single()
+
+    if (error) throw error
+
+    console.log('✅ Dati ordine caricati:', data)
+    return data
+  } catch (error) {
+    console.error('❌ Errore caricamento ordine:', error.message)
+    alert('Errore caricamento dati ordine: ' + error.message)
+    return null
+  }
+}
+
+/**
+ * Carica tutti gli ordini con i dati correlati
+ * @returns {Promise<Array>} Array di ordini
+ */
+export async function fetchOrders() {
+  try {
+    console.log('📥 Caricamento ordini...')
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        clients (
+          id,
+          full_name,
+          phone_whatsapp
+        ),
+        subscriptions (
+          id,
+          username_iptv,
+          package_name
+        )
+      `)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    console.log('✅ Ordini caricati:', data?.length || 0)
+    return data || []
+  } catch (error) {
+    console.error('❌ Errore caricamento ordini:', error.message)
+    alert('Errore caricamento ordini: ' + error.message)
+    return []
   }
 }
