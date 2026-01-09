@@ -676,7 +676,7 @@ const populateOrdersTable = (orders) => {
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
           <div class="text-sm text-gray-900 dark:text-white">
-            ${subscription.package_name || 'N/A'}
+            ${order.plan_name || subscription.package_name || 'N/A'}
           </div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
@@ -1249,6 +1249,11 @@ window.openOrderModal = async function(orderId = null) {
   const modal = document.getElementById('order-modal');
   const form = document.getElementById('order-form');
 
+  if (!modal || !form) {
+    console.error('Modal o form degli ordini non trovati');
+    return;
+  }
+
   // Reset form
   form.reset();
   form.dataset.orderId = orderId || '';
@@ -1258,32 +1263,38 @@ window.openOrderModal = async function(orderId = null) {
     const orderData = await loadOrderForEdit(orderId);
     if (orderData) {
       // Popola il form con i dati esistenti
-      form['client_id'].value = orderData.client_id;
-      form['subscription_id'].value = orderData.subscription_id;
-      form['order_date'].value = orderData.order_date.split('T')[0];
-      form['start_date'].value = orderData.start_date.split('T')[0];
-      form['end_date'].value = orderData.end_date.split('T')[0];
-      form['plan_name'].value = orderData.plan_name;
-      form['plan_duration'].value = orderData.plan_duration;
-      form['price'].value = orderData.price;
-      form['payment_method'].value = orderData.payment_method;
-      form['notes'].value = orderData.notes || '';
-      form['status'].value = orderData.status;
+      if (form['client_id']) form['client_id'].value = orderData.client_id || '';
+      if (form['subscription_id']) form['subscription_id'].value = orderData.subscription_id || '';
+      if (form['order_date']) form['order_date'].value = orderData.order_date ? orderData.order_date.split('T')[0] : '';
+      if (form['start_date']) form['start_date'].value = orderData.start_date ? orderData.start_date.split('T')[0] : '';
+      if (form['end_date']) form['end_date'].value = orderData.end_date ? orderData.end_date.split('T')[0] : '';
+      if (form['plan_name']) form['plan_name'].value = orderData.plan_name || '';
+      if (form['plan_duration']) form['plan_duration'].value = orderData.plan_duration || '1 mese';
+      if (form['price']) form['price'].value = orderData.price || '';
+      if (form['payment_method']) form['payment_method'].value = orderData.payment_method || 'cash';
+      if (form['notes']) form['notes'].value = orderData.notes || '';
+      if (form['status']) form['status'].value = orderData.status || 'pending';
     }
   } else {
     // Nuovo ordine
     const today = new Date().toISOString().split('T')[0];
-    form['order_date'].value = today;
-    form['start_date'].value = today;
-    form['status'].value = 'pending';
+    if (form['order_date']) form['order_date'].value = today;
+    if (form['start_date']) form['start_date'].value = today;
+    if (form['status']) form['status'].value = 'pending';
+    if (form['plan_duration']) form['plan_duration'].value = '1 mese';
+    if (form['payment_method']) form['payment_method'].value = 'cash';
 
     // Calcola la data di fine iniziale (1 mese)
-    calculateEndDate();
+    setTimeout(() => calculateEndDate(), 100); // Piccolo delay per assicurarsi che i valori siano impostati
   }
 
   // Carica i dropdown
-  await loadClientsForDropdown('client_id');
-  await loadSubscriptionsForDropdown('subscription_id');
+  try {
+    await loadClientsForDropdown('client_id');
+    await loadSubscriptionsForDropdown('subscription_id');
+  } catch (error) {
+    console.error('Errore caricamento dropdown:', error);
+  }
 
   modal.classList.remove('hidden');
 };
@@ -1301,13 +1312,27 @@ window.closeOrderModal = function() {
  */
 window.calculateEndDate = function() {
   const form = document.getElementById('order-form');
-  const startDate = new Date(form['start_date'].value);
-  const duration = parseInt(form['plan_duration'].value);
+  if (!form) return;
 
-  if (startDate && duration) {
+  const startDateInput = form['start_date'];
+  const endDateInput = form['end_date'];
+  const durationSelect = form['plan_duration'];
+
+  if (!startDateInput || !endDateInput || !durationSelect) return;
+
+  const startDate = new Date(startDateInput.value);
+  const durationText = durationSelect.value;
+
+  if (startDate && durationText) {
     const endDate = new Date(startDate);
-    endDate.setMonth(endDate.getMonth() + duration);
-    form['end_date'].value = endDate.toISOString().split('T')[0];
+
+    // Estrai il numero dalla stringa (es: "3 mesi" -> 3)
+    const durationMatch = durationText.match(/(\d+)/);
+    if (durationMatch) {
+      const months = parseInt(durationMatch[1]);
+      endDate.setMonth(endDate.getMonth() + months);
+      endDateInput.value = endDate.toISOString().split('T')[0];
+    }
   }
 };
 
