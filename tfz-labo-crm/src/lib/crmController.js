@@ -333,58 +333,151 @@ export async function loadTicketForEdit(ticketId) {
 }
 
 /**
- * Salva un ordine (nuovo o modifica esistente)
+ * Salva un ordine (nuovo o modifica esistente) - Crea automaticamente cliente e abbonamento
  * @param {Object} formData - Dati del form ordine
  * @param {string|number} [orderId] - ID dell'ordine se modifica
  * @returns {Promise<boolean>} True se riuscito
  */
 export async function saveOrder(formData, orderId = null) {
   try {
-    console.log(`${orderId ? '📝 Modifica' : '➕ Creazione'} ordine...`, formData)
+    console.log(`${orderId ? '📝 Modifica' : '➕ Creazione'} ordine completo...`, formData)
 
+    // Prima, verifica se il cliente esiste già (basato su nome e telefono)
+    let clientId = null;
+    const { data: existingClients } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('full_name', formData.client_name?.trim())
+      .eq('phone_whatsapp', formData.client_phone?.trim())
+      .limit(1);
+
+    if (existingClients && existingClients.length > 0) {
+      // Cliente esistente
+      clientId = existingClients[0].id;
+      console.log('👤 Cliente esistente trovato:', clientId);
+    } else {
+      // Crea nuovo cliente
+      const clientData = {
+        full_name: formData.client_name?.trim(),
+        phone_whatsapp: formData.client_phone?.trim(),
+        email: formData.client_email?.trim() || null,
+        m3u_code: formData.m3u_code?.trim() || null,
+        mac_address: formData.mac_address?.trim() || null,
+        device_key: formData.device_key?.trim() || null,
+        paid_amount: formData.paid_amount ? parseFloat(formData.paid_amount) : null,
+        notes: formData.notes?.trim() || null,
+        status: 'active'
+      };
+
+      const { data: newClient, error: clientError } = await supabase
+        .from('clients')
+        .insert([clientData])
+        .select()
+        .single();
+
+      if (clientError) throw clientError;
+      clientId = newClient.id;
+      console.log('✅ Nuovo cliente creato:', clientId);
+    }
+
+    // Ora verifica se l'abbonamento esiste già (basato su username_iptv)
+    let subscriptionId = null;
+    const { data: existingSubs } = await supabase
+      .from('subscriptions')
+      .select('id')
+      .eq('username_iptv', formData.username_iptv?.trim())
+      .limit(1);
+
+    if (existingSubs && existingSubs.length > 0) {
+      // Abbonamento esistente - aggiorna i dati
+      subscriptionId = existingSubs[0].id;
+      const subUpdateData = {
+        client_id: clientId,
+        password_iptv: formData.password_iptv || null,
+        server_url: formData.server_url || null,
+        package_name: formData.package_name?.trim() || null,
+        price: formData.price ? parseFloat(formData.price) : null,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        active: true
+      };
+
+      const { error: subUpdateError } = await supabase
+        .from('subscriptions')
+        .update(subUpdateData)
+        .eq('id', subscriptionId);
+
+      if (subUpdateError) throw subUpdateError;
+      console.log('📝 Abbonamento esistente aggiornato:', subscriptionId);
+    } else {
+      // Crea nuovo abbonamento
+      const subData = {
+        client_id: clientId,
+        username_iptv: formData.username_iptv?.trim(),
+        password_iptv: formData.password_iptv || null,
+        server_url: formData.server_url || null,
+        package_name: formData.package_name?.trim() || null,
+        price: formData.price ? parseFloat(formData.price) : null,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        active: true
+      };
+
+      const { data: newSub, error: subError } = await supabase
+        .from('subscriptions')
+        .insert([subData])
+        .select()
+        .single();
+
+      if (subError) throw subError;
+      subscriptionId = newSub.id;
+      console.log('✅ Nuovo abbonamento creato:', subscriptionId);
+    }
+
+    // Infine, crea l'ordine
     const orderData = {
-      client_id: parseInt(formData.client_id),
-      subscription_id: parseInt(formData.subscription_id),
+      client_id: clientId,
+      subscription_id: subscriptionId,
       order_date: formData.order_date,
       start_date: formData.start_date,
       end_date: formData.end_date,
       plan_name: formData.plan_name?.trim(),
       plan_duration: formData.plan_duration?.trim(),
       price: parseFloat(formData.price),
-      payment_method: formData.payment_method,
+      payment_method: formData.payment_method || 'cash',
       notes: formData.notes?.trim() || null,
       status: formData.status || 'pending'
-    }
+    };
 
-    let result
+    let result;
     if (orderId) {
       // Modifica esistente
       result = await supabase
         .from('orders')
         .update(orderData)
         .eq('id', orderId)
-        .select()
+        .select();
     } else {
       // Nuovo ordine
       result = await supabase
         .from('orders')
         .insert([orderData])
-        .select()
+        .select();
     }
 
-    if (result.error) throw result.error
+    if (result.error) throw result.error;
 
-    console.log('✅ Ordine salvato:', result.data[0])
-    alert(`Ordine ${orderId ? 'modificato' : 'creato'} con successo!`)
+    console.log('✅ Ordine completo salvato:', result.data[0]);
+    alert(`Ordine ${orderId ? 'modificato' : 'creato'} con successo! Cliente e abbonamento ${orderId ? 'aggiornati' : 'creati automaticamente'}.`);
 
     // Ricarica i dati
-    window.dispatchEvent(new Event('data-updated'))
+    window.dispatchEvent(new Event('data-updated'));
 
-    return true
+    return true;
   } catch (error) {
-    console.error('❌ Errore salvataggio ordine:', error.message)
-    alert('Errore salvataggio ordine: ' + error.message)
-    return false
+    console.error('❌ Errore salvataggio ordine completo:', error.message);
+    alert('Errore salvataggio ordine: ' + error.message);
+    return false;
   }
 }
 

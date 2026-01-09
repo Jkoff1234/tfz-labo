@@ -231,30 +231,67 @@
           <button class="modal-close" onclick="closeOrderModal()">&times;</button>
         </div>
         <form id="order-form" class="modal-form">
-          <!-- Dati Cliente e Abbonamento -->
+          <!-- Dati Cliente -->
           <div class="form-section">
-            <h3 class="form-section-title">Dati Ordine</h3>
+            <h3 class="form-section-title">Dati Cliente</h3>
             <div class="form-group">
-              <label for="client_id">Cliente *</label>
-              <select id="client_id" name="client_id" required>
-                <option value="">Seleziona un cliente...</option>
-              </select>
+              <label for="client_name">Nome Cliente *</label>
+              <input type="text" id="client_name" name="client_name" required placeholder="Mario Rossi">
             </div>
             <div class="form-group">
-              <label for="subscription_id">Abbonamento *</label>
-              <select id="subscription_id" name="subscription_id" required>
-                <option value="">Seleziona un abbonamento...</option>
-              </select>
+              <label for="client_phone">WhatsApp/Telefono *</label>
+              <input type="tel" id="client_phone" name="client_phone" required placeholder="+39 333 1234567">
             </div>
+            <div class="form-group">
+              <label for="client_email">Email</label>
+              <input type="email" id="client_email" name="client_email" placeholder="cliente@email.com">
+            </div>
+            <div class="form-group">
+              <label for="m3u_code">Codice M3U</label>
+              <input type="text" id="m3u_code" name="m3u_code" placeholder="ABC123">
+            </div>
+            <div class="form-group">
+              <label for="mac_address">MAC Address</label>
+              <input type="text" id="mac_address" name="mac_address" placeholder="00:1A:2B:3C:4D:5E">
+            </div>
+            <div class="form-group">
+              <label for="device_key">Chiave Dispositivo</label>
+              <input type="text" id="device_key" name="device_key" placeholder="KEY123456">
+            </div>
+            <div class="form-group">
+              <label for="paid_amount">Importo Pagato (€)</label>
+              <input type="number" id="paid_amount" name="paid_amount" step="0.01" min="0" placeholder="50.00">
+            </div>
+          </div>
+
+          <!-- Dettagli Abbonamento -->
+          <div class="form-section">
+            <h3 class="form-section-title">Dettagli Abbonamento</h3>
+            <div class="form-group">
+              <label for="username_iptv">Username IPTV *</label>
+              <input type="text" id="username_iptv" name="username_iptv" required placeholder="user123">
+            </div>
+            <div class="form-group">
+              <label for="password_iptv">Password IPTV</label>
+              <input type="password" id="password_iptv" name="password_iptv" placeholder="password123">
+            </div>
+            <div class="form-group">
+              <label for="server_url">URL Server</label>
+              <input type="url" id="server_url" name="server_url" placeholder="http://server.iptv.com">
+            </div>
+            <div class="form-group">
+              <label for="package_name">Nome Pacchetto</label>
+              <input type="text" id="package_name" name="package_name" placeholder="Premium IPTV">
+            </div>
+          </div>
+
+          <!-- Dettagli Ordine -->
+          <div class="form-section">
+            <h3 class="form-section-title">Dettagli Ordine</h3>
             <div class="form-group">
               <label for="order_date">Data Ordine</label>
               <input type="date" id="order_date" name="order_date" required>
             </div>
-          </div>
-
-          <!-- Dettagli Piano -->
-          <div class="form-section">
-            <h3 class="form-section-title">Dettagli Piano</h3>
             <div class="form-group">
               <label for="plan_name">Nome Piano *</label>
               <input type="text" id="plan_name" name="plan_name" required placeholder="Premium IPTV">
@@ -317,7 +354,7 @@
 
           <div class="modal-actions">
             <button type="button" class="btn-secondary" onclick="closeOrderModal()">Annulla</button>
-            <button type="submit" class="btn-primary">Salva Ordine</button>
+            <button type="submit" class="btn-primary">Salva Ordine Completo</button>
           </div>
         </form>
       </div>

@@ -228,7 +228,11 @@ const loadClientsContent = async () => {
       <!-- Header -->
       <div class="flex items-center justify-between">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-900">Lista Clienti</h1>
-        <div class="flex space-x-3">
+        <div class="flex items-center space-x-4">
+          <div class="flex-1 max-w-md">
+            <input type="text" id="clients-search" placeholder="Cerca clienti per nome, telefono o email..." 
+                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-900" onkeyup="filterClients()">
+          </div>
           <button onclick="fetchClients()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
             🔄 Aggiorna
           </button>
@@ -458,7 +462,11 @@ const loadSubscriptionsContent = async () => {
       <!-- Header -->
       <div class="flex items-center justify-between">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-900">Abbonamenti & Linee</h1>
-        <div class="flex space-x-3">
+        <div class="flex items-center space-x-4">
+          <div class="flex-1 max-w-md">
+            <input type="text" id="subscriptions-search" placeholder="Cerca abbonamenti per cliente, username o pacchetto..." 
+                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-900" onkeyup="filterSubscriptions()">
+          </div>
           <button onclick="fetchSubscriptions()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
             🔄 Aggiorna
           </button>
@@ -521,7 +529,11 @@ const loadTicketsContent = async () => {
       <!-- Header -->
       <div class="flex items-center justify-between">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-900">Ticket Supporto</h1>
-        <div class="flex space-x-3">
+        <div class="flex items-center space-x-4">
+          <div class="flex-1 max-w-md">
+            <input type="text" id="tickets-search" placeholder="Cerca ticket per cliente, oggetto o stato..." 
+                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-900" onkeyup="filterTickets()">
+          </div>
           <button onclick="fetchTickets()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
             🔄 Aggiorna
           </button>
@@ -581,9 +593,15 @@ const loadOrdersContent = async () => {
       <!-- Header -->
       <div class="flex items-center justify-between">
         <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-900">Chiamata Ordini</h1>
-        <button onclick="openOrderModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
-          ➕ Nuovo Ordine
-        </button>
+        <div class="flex items-center space-x-4">
+          <div class="flex-1 max-w-md">
+            <input type="text" id="orders-search" placeholder="Cerca ordini per cliente, piano o prezzo..." 
+                   class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-gray-900" onkeyup="filterOrders()">
+          </div>
+          <button onclick="openOrderModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
+            ➕ Nuovo Ordine
+          </button>
+        </div>
       </div>
 
       <!-- Lista Ordini -->
@@ -1259,12 +1277,23 @@ window.openOrderModal = async function(orderId = null) {
   form.dataset.orderId = orderId || '';
 
   if (orderId) {
-    // Modifica ordine esistente
+    // Modifica ordine esistente - carica i dati
     const orderData = await loadOrderForEdit(orderId);
     if (orderData) {
       // Popola il form con i dati esistenti
-      if (form['client_id']) form['client_id'].value = orderData.client_id || '';
-      if (form['subscription_id']) form['subscription_id'].value = orderData.subscription_id || '';
+      if (form['client_name']) form['client_name'].value = orderData.clients?.full_name || '';
+      if (form['client_phone']) form['client_phone'].value = orderData.clients?.phone_whatsapp || '';
+      if (form['client_email']) form['client_email'].value = orderData.clients?.email || '';
+      if (form['m3u_code']) form['m3u_code'].value = orderData.clients?.m3u_code || '';
+      if (form['mac_address']) form['mac_address'].value = orderData.clients?.mac_address || '';
+      if (form['device_key']) form['device_key'].value = orderData.clients?.device_key || '';
+      if (form['paid_amount']) form['paid_amount'].value = orderData.clients?.paid_amount || '';
+
+      if (form['username_iptv']) form['username_iptv'].value = orderData.subscriptions?.username_iptv || '';
+      if (form['password_iptv']) form['password_iptv'].value = orderData.subscriptions?.password_iptv || '';
+      if (form['server_url']) form['server_url'].value = orderData.subscriptions?.server_url || '';
+      if (form['package_name']) form['package_name'].value = orderData.subscriptions?.package_name || '';
+
       if (form['order_date']) form['order_date'].value = orderData.order_date ? orderData.order_date.split('T')[0] : '';
       if (form['start_date']) form['start_date'].value = orderData.start_date ? orderData.start_date.split('T')[0] : '';
       if (form['end_date']) form['end_date'].value = orderData.end_date ? orderData.end_date.split('T')[0] : '';
@@ -1285,15 +1314,7 @@ window.openOrderModal = async function(orderId = null) {
     if (form['payment_method']) form['payment_method'].value = 'cash';
 
     // Calcola la data di fine iniziale (1 mese)
-    setTimeout(() => calculateEndDate(), 100); // Piccolo delay per assicurarsi che i valori siano impostati
-  }
-
-  // Carica i dropdown
-  try {
-    await loadClientsForDropdown('client_id');
-    await loadSubscriptionsForDropdown('subscription_id');
-  } catch (error) {
-    console.error('Errore caricamento dropdown:', error);
+    setTimeout(() => calculateEndDate(), 100);
   }
 
   modal.classList.remove('hidden');
@@ -1341,6 +1362,101 @@ window.loadSection = loadSection;
 window.initCRM = initCRM;
 window.testConnection = testConnection;
 window.fetchClients = fetchClients;
+window.filterClients = function() {
+  const searchTerm = document.getElementById('clients-search').value.toLowerCase();
+  const tableBody = document.getElementById('clients-table-body');
+  const rows = tableBody.getElementsByTagName('tr');
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const cells = row.getElementsByTagName('td');
+    let found = false;
+
+    // Cerca in nome, telefono ed email
+    for (let j = 0; j < cells.length && j < 3; j++) {
+      const cellText = cells[j].textContent.toLowerCase();
+      if (cellText.includes(searchTerm)) {
+        found = true;
+        break;
+      }
+    }
+
+    row.style.display = found ? '' : 'none';
+  }
+};
+
+window.filterSubscriptions = function() {
+  const searchTerm = document.getElementById('subscriptions-search').value.toLowerCase();
+  const tableBody = document.getElementById('subscriptions-table-body');
+  const rows = tableBody.getElementsByTagName('tr');
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const cells = row.getElementsByTagName('td');
+    let found = false;
+
+    // Cerca in cliente, username e pacchetto
+    for (let j = 0; j < cells.length && j < 4; j++) {
+      const cellText = cells[j].textContent.toLowerCase();
+      if (cellText.includes(searchTerm)) {
+        found = true;
+        break;
+      }
+    }
+
+    row.style.display = found ? '' : 'none';
+  }
+};
+
+window.filterOrders = function() {
+  const searchTerm = document.getElementById('orders-search').value.toLowerCase();
+  const tableBody = document.getElementById('orders-table-body');
+  const rows = tableBody.getElementsByTagName('tr');
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const cells = row.getElementsByTagName('td');
+    let found = false;
+
+    // Cerca in cliente, piano e prezzo
+    for (let j = 0; j < cells.length && j < 4; j++) {
+      const cellText = cells[j].textContent.toLowerCase();
+      if (cellText.includes(searchTerm)) {
+        found = true;
+        break;
+      }
+    }
+
+    row.style.display = found ? '' : 'none';
+  }
+};
+
+window.filterTickets = function() {
+  const searchTerm = document.getElementById('tickets-search').value.toLowerCase();
+  const tableBody = document.getElementById('tickets-table-body');
+  const rows = tableBody.getElementsByTagName('tr');
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const cells = row.getElementsByTagName('td');
+    let found = false;
+
+    // Cerca in cliente, oggetto e stato
+    for (let j = 0; j < cells.length && j < 4; j++) {
+      const cellText = cells[j].textContent.toLowerCase();
+      if (cellText.includes(searchTerm)) {
+        found = true;
+        break;
+      }
+    }
+
+    row.style.display = found ? '' : 'none';
+  }
+};
+window.filterClients = filterClients;
+window.filterSubscriptions = filterSubscriptions;
+window.filterOrders = filterOrders;
+window.filterTickets = filterTickets;
 window.loadClientsForDropdown = async function(selectId) {
   const select = document.getElementById(selectId);
   if (!select) return;
