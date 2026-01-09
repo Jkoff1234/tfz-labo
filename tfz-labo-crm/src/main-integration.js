@@ -99,7 +99,7 @@ const loadSection = async (section) => {
         console.log('❓ Sezione non riconosciuta:', section);
         contentArea.innerHTML = `
           <div class="text-center py-12">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Sezione in Sviluppo</h2>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-900 mb-4">Sezione in Sviluppo</h2>
             <p class="text-gray-600 dark:text-gray-300">Questa sezione sarà disponibile a breve.</p>
           </div>
         `;
@@ -113,7 +113,7 @@ const loadSection = async (section) => {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
           </svg>
         </div>
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Errore di Caricamento</h2>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-900 mb-2">Errore di Caricamento</h2>
         <p class="text-gray-600 dark:text-gray-300">${error.message}</p>
       </div>
     `;
@@ -134,7 +134,7 @@ const loadDashboardContent = async () => {
     <div class="space-y-6">
       <!-- Header -->
       <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-900">Dashboard</h1>
         <button onclick="loadDashboardStats()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
           🔄 Aggiorna
         </button>
@@ -151,7 +151,7 @@ const loadDashboardContent = async () => {
             </div>
             <div class="ml-4">
               <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Totale Clienti</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-white" id="total-clients">-</p>
+              <p class="text-2xl font-bold text-gray-900 dark:text-gray-900" id="total-clients">-</p>
             </div>
           </div>
         </div>
@@ -165,7 +165,7 @@ const loadDashboardContent = async () => {
             </div>
             <div class="ml-4">
               <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Abbonamenti Attivi</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-white" id="active-subscriptions">-</p>
+              <p class="text-2xl font-bold text-gray-900 dark:text-gray-900" id="active-subscriptions">-</p>
             </div>
           </div>
         </div>
@@ -179,7 +179,7 @@ const loadDashboardContent = async () => {
             </div>
             <div class="ml-4">
               <p class="text-sm font-medium text-gray-600 dark:text-gray-400">In Scadenza (48h)</p>
-              <p class="text-2xl font-bold text-gray-900 dark:text-white" id="expiring-subscriptions">-</p>
+              <p class="text-2xl font-bold text-gray-900 dark:text-gray-900" id="expiring-subscriptions">-</p>
             </div>
           </div>
         </div>
@@ -189,20 +189,20 @@ const loadDashboardContent = async () => {
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Grafico Stato Abbonamenti -->
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stato Abbonamenti</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-900 mb-4">Stato Abbonamenti</h3>
           <canvas id="subscriptionsChart" width="400" height="300"></canvas>
         </div>
 
         <!-- Grafico Clienti per Mese -->
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Clienti Registrati (Ultimi 6 mesi)</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-900 mb-4">Clienti Registrati (Ultimi 6 mesi)</h3>
           <canvas id="clientsChart" width="400" height="300"></canvas>
         </div>
       </div>
 
       <!-- Grafico Ricavi Mensili -->
       <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ricavi Mensili</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-900 mb-4">Ricavi Mensili</h3>
         <canvas id="revenueChart" width="800" height="300"></canvas>
       </div>
     </div>
@@ -227,7 +227,7 @@ const loadClientsContent = async () => {
     <div class="space-y-6">
       <!-- Header -->
       <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Lista Clienti</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-900">Lista Clienti</h1>
         <div class="flex space-x-3">
           <button onclick="fetchClients()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
             🔄 Aggiorna
@@ -281,7 +281,7 @@ const loadAddClientContent = async () => {
     <div class="max-w-2xl mx-auto space-y-6">
       <!-- Header -->
       <div class="text-center">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Aggiungi Nuovo Cliente</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-900">Aggiungi Nuovo Cliente</h1>
         <p class="mt-2 text-gray-600 dark:text-gray-300">Inserisci i dati del nuovo cliente nel sistema</p>
       </div>
 
@@ -457,7 +457,7 @@ const loadSubscriptionsContent = async () => {
     <div class="space-y-6">
       <!-- Header -->
       <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Abbonamenti & Linee</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-900">Abbonamenti & Linee</h1>
         <div class="flex space-x-3">
           <button onclick="fetchSubscriptions()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
             🔄 Aggiorna
@@ -520,7 +520,7 @@ const loadTicketsContent = async () => {
     <div class="space-y-6">
       <!-- Header -->
       <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Ticket Supporto</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-900">Ticket Supporto</h1>
         <div class="flex space-x-3">
           <button onclick="fetchTickets()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
             🔄 Aggiorna
@@ -580,7 +580,7 @@ const loadOrdersContent = async () => {
     <div class="space-y-6">
       <!-- Header -->
       <div class="flex items-center justify-between">
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Chiamata Ordini</h1>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-900">Chiamata Ordini</h1>
         <button onclick="openOrderModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
           ➕ Nuovo Ordine
         </button>
@@ -623,7 +623,7 @@ const loadOrdersContent = async () => {
           <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
           </svg>
-          <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">Nessun ordine</h3>
+          <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-900">Nessun ordine</h3>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Inizia creando il tuo primo ordine.</p>
         </div>
       </div>
@@ -662,7 +662,7 @@ const populateOrdersTable = (orders) => {
     return `
       <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
         <td class="px-6 py-4 whitespace-nowrap">
-          <div class="text-sm font-medium text-gray-900 dark:text-white">
+          <div class="text-sm font-medium text-gray-900 dark:text-gray-900">
             ${client.full_name || 'N/A'}
           </div>
           <div class="text-sm text-gray-500 dark:text-gray-400">
@@ -670,17 +670,17 @@ const populateOrdersTable = (orders) => {
           </div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-          <div class="text-sm text-gray-900 dark:text-white">
+          <div class="text-sm text-gray-900 dark:text-gray-900">
             ${client.phone_whatsapp || 'N/A'}
           </div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-          <div class="text-sm text-gray-900 dark:text-white">
+          <div class="text-sm text-gray-900 dark:text-gray-900">
             ${order.plan_name || subscription.package_name || 'N/A'}
           </div>
         </td>
         <td class="px-6 py-4 whitespace-nowrap">
-          <div class="text-sm text-gray-900 dark:text-white">
+          <div class="text-sm text-gray-900 dark:text-gray-900">
             €${order.price || 0}
           </div>
         </td>

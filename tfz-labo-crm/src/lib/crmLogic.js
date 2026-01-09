@@ -70,7 +70,7 @@ const populateClientsTable = (clients) => {
     const createdDate = new Date(client.created_at).toLocaleDateString('it-IT');
 
     row.innerHTML = `
-      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-900">
         ${client.full_name}
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
@@ -322,7 +322,7 @@ const populateSubscriptionsTable = (subscriptions) => {
     const endDateFormatted = endDate.toLocaleDateString('it-IT');
 
     row.innerHTML = `
-      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-900">
         ${sub.clients?.full_name || 'Cliente non trovato'}
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
@@ -407,7 +407,7 @@ const populateTicketsTable = (tickets) => {
     row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors';
 
     row.innerHTML = `
-      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-900">
         ${ticket.clients?.full_name || 'Cliente non trovato'}
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
